@@ -9,7 +9,11 @@
       "Skill(update-config)",
       "Skill(update-config:*)",
       "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\('tool_input',{}\\).get\\('file_path','unknown'\\)\\)\")",
-      "Bash(python -c ' *)"
+      "Bash(python -c ' *)",
+      "Bash(npm install *)",
+      "Bash(taskkill /F /IM node.exe)",
+      "Bash(rm -f \"C:/Users/sam.osako/Documents/CLOUDE CODE PROJETO/backend/db/estetica.db\")",
+      "Bash(cmd *)"
     ]
   }
 }

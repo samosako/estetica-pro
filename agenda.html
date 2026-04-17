@@ -684,51 +684,175 @@
 
 <script>
 const HORA_INICIO = 8, HORAS = 12, SLOT_H = 68;
+const API_BASE = 'http://localhost:3001/api';
 
-const profissionais = [
-  { nome: 'Ana Paula',    cor: '#9b87c4', bg: '#f0ecf9' },
-  { nome: 'Carla Souza',  cor: '#c97a95', bg: '#fceef4' },
-  { nome: 'Júlia Mendes', cor: '#6ab4a8', bg: '#eaf6f4' },
-];
+// Arrays populados pela API
+let profissionais = [];
+let clientes      = [];
+let agendamentos  = [];
 
-const clientes = [
-  { nome: 'Mariana Costa',   tel: '(11) 99201-3344', cpf: '123.456.789-00' },
-  { nome: 'Letícia Alves',   tel: '(11) 98877-2211', cpf: '234.567.890-11' },
-  { nome: 'Patrícia Nunes',  tel: '(11) 97766-5500', cpf: '345.678.901-22' },
-  { nome: 'Gabriela Lima',   tel: '(11) 96655-4433', cpf: '456.789.012-33' },
-  { nome: 'Amanda Rocha',    tel: '(11) 95544-3322', cpf: '567.890.123-44' },
-  { nome: 'Isabela Freitas', tel: '(11) 94433-2211', cpf: '678.901.234-55' },
-  { nome: 'Renata Oliveira', tel: '(11) 93322-1100', cpf: '789.012.345-66' },
-  { nome: 'Camila Santos',   tel: '(11) 92211-0099', cpf: '890.123.456-77' },
-];
+// historicoClientes permanece local (não há endpoint na API)
+const historicoClientes = [];
 
-const historicoClientes = [
-  { nome: 'Mariana Silva',   diasSemVisita: 45, retornoMarcado: false, tel: '(11) 91122-3344' },
-  { nome: 'Fernanda Lima',   diasSemVisita: 32, retornoMarcado: false, tel: '(11) 92233-4455' },
-  { nome: 'Juliana Prado',   diasSemVisita: 38, retornoMarcado: true,  tel: '(11) 93344-5566', proximoApt: '22/04' },
-  { nome: 'Priscila Torres', diasSemVisita: 60, retornoMarcado: false, tel: '(11) 94455-6677' },
-  { nome: 'Roberta Melo',    diasSemVisita: 28, retornoMarcado: false, tel: '(11) 95566-7788' },
-  { nome: 'Sandra Vaz',      diasSemVisita: 50, retornoMarcado: true,  tel: '(11) 96677-8899', proximoApt: '25/04' },
-];
-
-let agendamentos = [
-  { hora:9,  min:0,  dur:60, cliente:'Mariana Costa',   proc:'Limpeza de Pele',        status:'confirmado', prof:0, obs:'' },
-  { hora:9,  min:30, dur:45, cliente:'Letícia Alves',   proc:'Design de Sobrancelhas', status:'confirmado', prof:1, obs:'' },
-  { hora:10, min:0,  dur:90, cliente:'Patrícia Nunes',  proc:'Botox',                  status:'pendente',   prof:2, obs:'Primeira vez com botox, ansiedade elevada' },
-  { hora:10, min:30, dur:60, cliente:'Gabriela Lima',   proc:'Preenchimento Labial',   status:'confirmado', prof:0, obs:'' },
-  { hora:11, min:0,  dur:30, cliente:'Amanda Rocha',    proc:'Cílios (Lash Lifting)',  status:'pendente',   prof:1, obs:'' },
-  { hora:11, min:30, dur:60, cliente:'Isabela Freitas', proc:'Peeling Químico',        status:'confirmado', prof:2, obs:'Pele sensível, usar fator 50' },
-  { hora:13, min:0,  dur:60, cliente:'Renata Oliveira', proc:'Microagulhamento',       status:'confirmado', prof:0, obs:'' },
-  { hora:13, min:30, dur:45, cliente:'Camila Santos',   proc:'Drenagem Linfática',     status:'noshow',     prof:1, obs:'Já deu no-show em jan/25' },
-  { hora:14, min:0,  dur:60, cliente:'Fernanda Dias',   proc:'Massagem Relaxante',     status:'confirmado', prof:2, obs:'' },
-  { hora:14, min:30, dur:90, cliente:'Beatriz Mendes',  proc:'Botox',                  status:'encaixe',    prof:0, obs:'Encaixe de urgência' },
-  { hora:15, min:0,  dur:45, cliente:'Carolina Pires',  proc:'Limpeza de Pele',        status:'pendente',   prof:1, obs:'' },
-  { hora:16, min:0,  dur:60, cliente:'Tatiana Borges',  proc:'Preenchimento Labial',   status:'confirmado', prof:2, obs:'' },
-];
-
-let dataAtual = new Date(2025, 3, 16);
+let dataAtual = new Date();
 let modalHora = 8, modalMin = 0, modalProf = 0;
 let clienteSelecionado = null;
+// ID do agendamento em edição (null = novo)
+let aptEditandoId = null;
+
+/* ============================================================
+   UTILITÁRIOS DE DATA
+   ============================================================ */
+function dataParaISO(d) {
+  const ano  = d.getFullYear();
+  const mes  = String(d.getMonth() + 1).padStart(2, '0');
+  const dia  = String(d.getDate()).padStart(2, '0');
+  return `${ano}-${mes}-${dia}`;
+}
+
+/* ============================================================
+   FEEDBACK VISUAL DE CARREGAMENTO / ERRO
+   ============================================================ */
+function mostrarCarregando(visivel) {
+  let el = document.getElementById('api-loading');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'api-loading';
+    el.style.cssText = `
+      position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+      background:var(--text); color:white; padding:10px 20px; border-radius:12px;
+      font-size:13px; font-weight:600; z-index:9999; display:none;
+      box-shadow:var(--shadow-lg); gap:8px; align-items:center;`;
+    el.innerHTML = `<span style="animation:spin 0.8s linear infinite;display:inline-block">⏳</span> Carregando agenda...`;
+    document.body.appendChild(el);
+    const style = document.createElement('style');
+    style.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+    document.head.appendChild(style);
+  }
+  el.style.display = visivel ? 'flex' : 'none';
+}
+
+function mostrarErroAPI(msg) {
+  let el = document.getElementById('api-erro');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'api-erro';
+    el.style.cssText = `
+      position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+      background:#c0405e; color:white; padding:12px 20px; border-radius:12px;
+      font-size:13px; font-weight:600; z-index:9999; display:none;
+      box-shadow:var(--shadow-lg); cursor:pointer; max-width:400px; text-align:center;`;
+    el.onclick = () => { el.style.display = 'none'; };
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 6000);
+}
+
+function mostrarSucesso(msg) {
+  let el = document.getElementById('api-sucesso');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'api-sucesso';
+    el.style.cssText = `
+      position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+      background:#1a6640; color:white; padding:12px 20px; border-radius:12px;
+      font-size:13px; font-weight:600; z-index:9999; display:none;
+      box-shadow:var(--shadow-lg);`;
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 3500);
+}
+
+/* ============================================================
+   MAPEAMENTO DE DADOS DA API → FORMATO INTERNO
+   ============================================================ */
+function mapearAgendamento(item, profissionaisLista) {
+  // Encontra o índice do profissional na lista local
+  const profIdx = profissionaisLista.findIndex(p => p.id === item.profissional_id);
+  const [horaStr, minStr] = (item.hora || '00:00').split(':');
+  return {
+    id:      item.id,
+    hora:    parseInt(horaStr, 10),
+    min:     parseInt(minStr, 10),
+    dur:     item.dur || 60,
+    cliente: item.cliente_nome || '',
+    clienteId: item.cliente_id,
+    proc:    item.procedimento || '',
+    status:  item.status || 'pendente',
+    prof:    profIdx >= 0 ? profIdx : 0,
+    profId:  item.profissional_id,
+    obs:     item.obs || '',
+    valor:   item.valor || null,
+  };
+}
+
+/* ============================================================
+   CARREGAR DADOS DA API
+   ============================================================ */
+async function carregarDados(data) {
+  mostrarCarregando(true);
+  const dataISO = dataParaISO(data);
+  try {
+    const [resProfissionais, resClientes, resAgendamentos] = await Promise.all([
+      fetch(`${API_BASE}/profissionais`),
+      fetch(`${API_BASE}/clientes`),
+      fetch(`${API_BASE}/agendamentos?data=${dataISO}`),
+    ]);
+
+    if (!resProfissionais.ok) throw new Error(`Erro ao buscar profissionais: ${resProfissionais.status}`);
+    if (!resClientes.ok)      throw new Error(`Erro ao buscar clientes: ${resClientes.status}`);
+    if (!resAgendamentos.ok)  throw new Error(`Erro ao buscar agendamentos: ${resAgendamentos.status}`);
+
+    const dadosProfissionais = await resProfissionais.json();
+    const dadosClientes      = await resClientes.json();
+    const dadosAgendamentos  = await resAgendamentos.json();
+
+    // Popula globais
+    profissionais = dadosProfissionais.map(p => ({
+      id:   p.id,
+      nome: p.nome,
+      cor:  p.cor  || '#9b87c4',
+      bg:   p.bg   || '#f0ecf9',
+    }));
+
+    clientes = dadosClientes.map(c => ({
+      id:   c.id,
+      nome: c.nome,
+      tel:  c.tel  || '',
+      cpf:  c.cpf  || '',
+    }));
+
+    agendamentos = dadosAgendamentos.map(item => mapearAgendamento(item, profissionais));
+
+    // Atualiza select de profissionais no modal
+    atualizarSelectProfissionais();
+
+    renderAgenda();
+    renderMiniCal();
+    renderRisco();
+
+  } catch (err) {
+    console.error('[EstéticaPro] Erro ao carregar dados:', err);
+    mostrarErroAPI(`Falha ao conectar com a API: ${err.message}. Verifique se o servidor está rodando em localhost:3001.`);
+  } finally {
+    mostrarCarregando(false);
+  }
+}
+
+/* ============================================================
+   ATUALIZAR SELECT DE PROFISSIONAIS NO MODAL
+   ============================================================ */
+function atualizarSelectProfissionais() {
+  const sel = document.getElementById('sel-prof');
+  if (!sel) return;
+  sel.innerHTML = profissionais.map((p, i) =>
+    `<option value="${i}">${p.nome}</option>`
+  ).join('');
+}
 
 const diasSemana = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
 const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
