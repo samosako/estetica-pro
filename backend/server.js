@@ -17,6 +17,7 @@ seed();
 app.use('/api/clientes',      require('./routes/clientes'));
 app.use('/api/profissionais', require('./routes/profissionais'));
 app.use('/api/agendamentos',  require('./routes/agendamentos'));
+app.use('/api/procedimentos', require('./routes/procedimentos'));
 
 // Rota raiz — health check
 app.get('/', (req, res) => {
