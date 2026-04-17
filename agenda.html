@@ -978,6 +978,7 @@ function renderRisco() {
 
 function abrirModalHora(h, m, pi) {
   modalHora = h; modalMin = m; modalProf = pi;
+  aptEditandoId = null;
   clienteSelecionado = null;
   document.getElementById('busca-cliente').value = '';
   document.getElementById('lista-autocomplete').style.display = 'none';
@@ -986,8 +987,9 @@ function abrirModalHora(h, m, pi) {
   document.getElementById('toggle-encaixe').checked = false;
   setToggle(false);
   document.getElementById('obs-agendamento').value = '';
+  const nomeProf = profissionais[pi] ? profissionais[pi].nome : '';
   document.getElementById('modal-horario-label').textContent =
-    `${formatarData(dataAtual)} · ${String(h).padStart(2,'0')}:00 — ${profissionais[pi].nome}`;
+    `${formatarData(dataAtual)} · ${String(h).padStart(2,'0')}:00${nomeProf ? ' — ' + nomeProf : ''}`;
   document.getElementById('modal-agendar').classList.add('ativo');
 }
 
