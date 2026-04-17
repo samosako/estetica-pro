@@ -800,6 +800,10 @@ function renderAgenda() {
         ${height > 46 ? `<div style="font-size:9px;opacity:0.5;margin-top:2px">${String(apt.hora).padStart(2,'0')}:${String(apt.min).padStart(2,'0')} · ${apt.dur}min</div>` : ''}
         ${apt.obs && height > 58 ? `<div style="font-size:9px;opacity:0.5;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📝 ${apt.obs}</div>` : ''}`;
       card.addEventListener('click', e => { e.stopPropagation(); verDetalhes(apt); });
+      card.addEventListener('mouseenter', e => mostrarTooltip(e, apt));
+      card.addEventListener('mousemove',  e => moverTooltip(e));
+      card.addEventListener('mouseleave', () => ocultarTooltip());
+      card.addEventListener('contextmenu', e => { ocultarTooltip(); abrirCtxMenu(e, apt); });
       corpo.appendChild(card);
     });
 
