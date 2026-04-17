@@ -1403,9 +1403,8 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') fecharCtxMenu();
 });
 
-renderAgenda();
-renderMiniCal();
-renderRisco();
+// Inicialização: carrega dados da API para a data atual
+carregarDados(dataAtual);
 </script>
 </body>
 </html>
