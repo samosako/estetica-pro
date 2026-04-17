@@ -1040,21 +1040,55 @@ function cadastrarCliente() {
   selecionarCliente(nome);
 }
 
-function salvarApt() {
-  if (!clienteSelecionado) { alert('Selecione ou cadastre uma cliente primeiro.'); return; }
-  const isEnc = document.getElementById('toggle-encaixe').checked;
-  agendamentos.push({
-    hora: modalHora, min: modalMin, dur: 60,
-    cliente: clienteSelecionado.nome,
-    proc: document.querySelector('#modal-agendar select').value,
-    status: isEnc ? 'encaixe' : 'pendente',
-    prof: parseInt(document.getElementById('sel-prof').value),
-    obs: document.getElementById('obs-agendamento').value,
-  });
-  fecharModal('modal-agendar');
-  renderAgenda();
-  renderRisco();
-  alert(`${isEnc ? 'Encaixe' : 'Agendamento'} salvo! Lembretes via WhatsApp serão enviados para ${clienteSelecionado.nome}.`);
+async function salvarApt() {
+  if (!clienteSelecionado) { mostrarErroAPI('Selecione ou cadastre uma cliente primeiro.'); return; }
+  const isEnc   = document.getElementById('toggle-encaixe').checked;
+  const profIdx = parseInt(document.getElementById('sel-prof').value);
+  const prof    = profissionais[profIdx];
+  const horaStr = `${String(modalHora).padStart(2,'0')}:${String(modalMin).padStart(2,'0')}`;
+
+  const payload = {
+    data:            dataParaISO(dataAtual),
+    hora:            horaStr,
+    dur:             60,
+    cliente_id:      clienteSelecionado.id,
+    profissional_id: prof ? prof.id : null,
+    procedimento:    document.querySelector('#modal-agendar select').value,
+    status:          isEnc ? 'encaixe' : 'pendente',
+    obs:             document.getElementById('obs-agendamento').value,
+  };
+
+  try {
+    let res;
+    if (aptEditandoId) {
+      // Edição
+      res = await fetch(`${API_BASE}/agendamentos/${aptEditandoId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+    } else {
+      // Novo
+      res = await fetch(`${API_BASE}/agendamentos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+    }
+
+    if (!res.ok) {
+      const erro = await res.json().catch(() => ({}));
+      throw new Error(erro.message || `Erro HTTP ${res.status}`);
+    }
+
+    fecharModal('modal-agendar');
+    mostrarSucesso(`${isEnc ? 'Encaixe' : 'Agendamento'} salvo! Lembretes via WhatsApp serão enviados para ${clienteSelecionado.nome}.`);
+    await carregarDados(dataAtual);
+
+  } catch (err) {
+    console.error('[EstéticaPro] Erro ao salvar agendamento:', err);
+    mostrarErroAPI(`Não foi possível salvar o agendamento: ${err.message}`);
+  }
 }
 
 const statusLabelDetalhe = { confirmado:'✅ Confirmado', pendente:'⏳ Pendente', noshow:'⚠️ No-show', encaixe:'🔵 Encaixe', cancelado:'❌ Cancelado' };
