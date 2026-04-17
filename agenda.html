@@ -1359,6 +1359,7 @@ document.getElementById('toggle-encaixe').addEventListener('change', function() 
 document.getElementById('modal-agendar').addEventListener('click', e => { if(e.target===e.currentTarget) fecharModal('modal-agendar'); });
 document.getElementById('modal-cliente').addEventListener('click', e => { if(e.target===e.currentTarget) fecharModal('modal-cliente'); });
 document.getElementById('modal-detalhes').addEventListener('click', e => { if(e.target===e.currentTarget) fecharModal('modal-detalhes'); });
+document.getElementById('modal-procedimentos').addEventListener('click', e => { if(e.target===e.currentTarget) fecharModal('modal-procedimentos'); });
 document.addEventListener('click', e => {
   if (!e.target.closest('#busca-cliente') && !e.target.closest('#lista-autocomplete'))
     document.getElementById('lista-autocomplete').style.display = 'none';
