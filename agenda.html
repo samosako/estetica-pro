@@ -933,8 +933,9 @@ function salvarApt() {
   alert(`${isEnc ? 'Encaixe' : 'Agendamento'} salvo! Lembretes via WhatsApp serão enviados para ${clienteSelecionado.nome}.`);
 }
 
+const statusLabelDetalhe = { confirmado:'✅ Confirmado', pendente:'⏳ Pendente', noshow:'⚠️ No-show', encaixe:'🔵 Encaixe', cancelado:'❌ Cancelado' };
+
 function verDetalhes(apt) {
-  const statusLabel = { confirmado:'✅ Confirmado', pendente:'⏳ Pendente', noshow:'⚠️ No-show', encaixe:'🔵 Encaixe', cancelado:'❌ Cancelado' };
   document.getElementById('det-avatar').textContent = apt.cliente[0];
   document.getElementById('det-nome').textContent = apt.cliente;
   document.getElementById('det-status-chip').textContent = statusLabel[apt.status] || apt.status;
