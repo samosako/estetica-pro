@@ -889,7 +889,7 @@ function atualizarSelectProcedimentos() {
   const sel = document.getElementById('sel-proc');
   if (!sel) return;
   if (!procedimentos.length) {
-    sel.innerHTML = '<option value="">Carregando...</option>';
+    sel.innerHTML = '<option value="">Nenhum procedimento cadastrado</option>';
     return;
   }
   sel.innerHTML = procedimentos.map(p =>
@@ -897,6 +897,28 @@ function atualizarSelectProcedimentos() {
   ).join('');
   // Dispara onChange para atualizar dur e valor se já houver selecionado
   sel.dispatchEvent(new Event('change'));
+}
+
+function aoSelecionarProcedimento(selEl) {
+  const opt = selEl.options[selEl.selectedIndex];
+  if (!opt || !opt.value) return;
+  // Auto-preenche duração
+  const dur = opt.dataset.dur;
+  if (dur) {
+    const selDur = document.getElementById('sel-dur');
+    if (selDur) selDur.value = dur;
+  }
+  // Exibe valor
+  const valor = parseFloat(opt.dataset.valor);
+  const infoEl = document.getElementById('proc-valor-info');
+  if (infoEl) {
+    if (!isNaN(valor)) {
+      infoEl.textContent = `Valor: R$ ${valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+      infoEl.style.display = 'block';
+    } else {
+      infoEl.style.display = 'none';
+    }
+  }
 }
 
 const diasSemana = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
