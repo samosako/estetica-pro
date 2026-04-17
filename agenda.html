@@ -1018,9 +1018,15 @@ function abrirModalHora(h, m, pi) {
   document.getElementById('toggle-encaixe').checked = false;
   setToggle(false);
   document.getElementById('obs-agendamento').value = '';
+  // Inicializar selects de minutos e duração
+  const selMin = document.getElementById('sel-min');
+  if (selMin) selMin.value = String(m);
+  const selDur = document.getElementById('sel-dur');
+  if (selDur) selDur.value = '60';
+  // Atualiza label do horário
   const nomeProf = profissionais[pi] ? profissionais[pi].nome : '';
   document.getElementById('modal-horario-label').textContent =
-    `${formatarData(dataAtual)} · ${String(h).padStart(2,'0')}:00${nomeProf ? ' — ' + nomeProf : ''}`;
+    `${formatarData(dataAtual)} · ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}${nomeProf ? ' — ' + nomeProf : ''}`;
   document.getElementById('modal-agendar').classList.add('ativo');
 }
 
