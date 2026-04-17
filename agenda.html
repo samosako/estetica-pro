@@ -1537,6 +1537,121 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') fecharCtxMenu();
 });
 
+/* ============================================================
+   GERENCIAR PROCEDIMENTOS
+   ============================================================ */
+function abrirModalProcedimentos() {
+  renderListaProcedimentosModal();
+  document.getElementById('modal-procedimentos').classList.add('ativo');
+}
+
+function renderListaProcedimentosModal() {
+  const el = document.getElementById('lista-procedimentos-modal');
+  if (!el) return;
+  if (!procedimentos.length) {
+    el.innerHTML = `<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:16px">Nenhum procedimento cadastrado ainda.</div>`;
+    return;
+  }
+  el.innerHTML = procedimentos.map(p => `
+    <div id="proc-row-${p.id}" style="display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--surface); border:1px solid var(--border-soft); border-radius:10px; margin-bottom:6px">
+      <div style="flex:1; min-width:0">
+        <div style="font-size:13px; font-weight:600; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap">${p.nome}</div>
+        <div style="font-size:10px; color:var(--text-muted); margin-top:2px">
+          R$ ${parseFloat(p.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} &nbsp;·&nbsp; ${p.dur} min
+        </div>
+      </div>
+      <button onclick="abrirEdicaoProcedimento(${p.id})" style="background:var(--lavender-bg); color:var(--lavender); border:1px solid var(--lavender-mid); border-radius:8px; padding:4px 10px; font-size:11px; font-weight:600; cursor:pointer; flex-shrink:0">Editar</button>
+      <button onclick="deletarProcedimento(${p.id})" style="background:#fcdcdc; color:#8c2020; border:1px solid #d06060; border-radius:8px; padding:4px 10px; font-size:11px; font-weight:600; cursor:pointer; flex-shrink:0">Excluir</button>
+    </div>
+  `).join('');
+}
+
+function abrirEdicaoProcedimento(id) {
+  const p = procedimentos.find(x => x.id === id);
+  if (!p) return;
+  const row = document.getElementById(`proc-row-${id}`);
+  if (!row) return;
+  row.innerHTML = `
+    <input id="edit-nome-${id}" type="text" value="${p.nome}" class="field-input" style="flex:1; font-size:12px; padding:6px 10px" />
+    <input id="edit-valor-${id}" type="number" min="0" step="0.01" value="${p.valor}" class="field-input" style="width:80px; font-size:12px; padding:6px 8px" />
+    <select id="edit-dur-${id}" class="field-input" style="width:90px; font-size:12px; padding:6px 8px">
+      ${[15,30,45,60,90,120,180].map(d => `<option value="${d}" ${p.dur===d?'selected':''}>${d} min</option>`).join('')}
+    </select>
+    <button onclick="salvarEdicaoProcedimento(${id})" style="background:var(--teal-bg); color:var(--teal-dark); border:1px solid var(--teal-mid); border-radius:8px; padding:4px 10px; font-size:11px; font-weight:600; cursor:pointer; flex-shrink:0">Salvar</button>
+    <button onclick="renderListaProcedimentosModal()" style="background:var(--surface2); color:var(--text-muted); border:1px solid var(--border); border-radius:8px; padding:4px 8px; font-size:11px; cursor:pointer; flex-shrink:0">✕</button>
+  `;
+  row.style.flexWrap = 'wrap';
+  row.style.gap = '6px';
+}
+
+async function salvarEdicaoProcedimento(id) {
+  const nome  = document.getElementById(`edit-nome-${id}`).value.trim();
+  const valor = parseFloat(document.getElementById(`edit-valor-${id}`).value) || 0;
+  const dur   = parseInt(document.getElementById(`edit-dur-${id}`).value, 10) || 60;
+  if (!nome) { mostrarErroAPI('Nome do procedimento é obrigatório.'); return; }
+  try {
+    const res = await fetch(`${API_BASE}/procedimentos/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome, valor, dur }),
+    });
+    if (!res.ok) throw new Error(`Erro HTTP ${res.status}`);
+    const atualizado = await res.json();
+    const idx = procedimentos.findIndex(x => x.id === id);
+    if (idx >= 0) procedimentos[idx] = atualizado;
+    atualizarSelectProcedimentos();
+    renderListaProcedimentosModal();
+    mostrarSucesso(`Procedimento "${nome}" atualizado!`);
+  } catch (err) {
+    mostrarErroAPI(`Não foi possível atualizar: ${err.message}`);
+  }
+}
+
+async function salvarNovoProcedimento() {
+  const nome  = document.getElementById('np-nome').value.trim();
+  const valor = parseFloat(document.getElementById('np-valor').value) || 0;
+  const dur   = parseInt(document.getElementById('np-dur').value, 10) || 60;
+  if (!nome) { mostrarErroAPI('Nome do procedimento é obrigatório.'); return; }
+  try {
+    const res = await fetch(`${API_BASE}/procedimentos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome, valor, dur }),
+    });
+    if (!res.ok) {
+      const erro = await res.json().catch(() => ({}));
+      throw new Error(erro.error || `Erro HTTP ${res.status}`);
+    }
+    const novo = await res.json();
+    procedimentos.push(novo);
+    procedimentos.sort((a, b) => a.nome.localeCompare(b.nome));
+    atualizarSelectProcedimentos();
+    renderListaProcedimentosModal();
+    document.getElementById('np-nome').value  = '';
+    document.getElementById('np-valor').value = '';
+    document.getElementById('np-dur').value   = '60';
+    mostrarSucesso(`Procedimento "${nome}" adicionado!`);
+  } catch (err) {
+    mostrarErroAPI(`Não foi possível adicionar: ${err.message}`);
+  }
+}
+
+async function deletarProcedimento(id) {
+  const p = procedimentos.find(x => x.id === id);
+  if (!p) return;
+  if (!confirm(`Excluir o procedimento "${p.nome}"? Esta ação não pode ser desfeita.`)) return;
+  try {
+    const res = await fetch(`${API_BASE}/procedimentos/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error(`Erro HTTP ${res.status}`);
+    procedimentos = procedimentos.filter(x => x.id !== id);
+    atualizarSelectProcedimentos();
+    renderListaProcedimentosModal();
+    mostrarSucesso(`Procedimento "${p.nome}" excluído.`);
+  } catch (err) {
+    mostrarErroAPI(`Não foi possível excluir: ${err.message}`);
+  }
+}
+
 // Inicialização: carrega dados da API para a data atual
 carregarProcedimentos();
 carregarDados(dataAtual);
