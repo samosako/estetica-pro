@@ -1121,7 +1121,10 @@ async function salvarApt() {
 
 const statusLabelDetalhe = { confirmado:'✅ Confirmado', pendente:'⏳ Pendente', noshow:'⚠️ No-show', encaixe:'🔵 Encaixe', cancelado:'❌ Cancelado' };
 
+let aptDetalhesAtual = null;
+
 function verDetalhes(apt) {
+  aptDetalhesAtual = apt;
   document.getElementById('det-avatar').textContent = apt.cliente[0];
   document.getElementById('det-nome').textContent = apt.cliente;
   document.getElementById('det-status-chip').textContent = statusLabelDetalhe[apt.status] || apt.status;
@@ -1131,6 +1134,75 @@ function verDetalhes(apt) {
   if (apt.obs) { obsBox.style.display = 'block'; document.getElementById('det-obs').textContent = apt.obs; }
   else { obsBox.style.display = 'none'; }
   document.getElementById('modal-detalhes').classList.add('ativo');
+}
+
+async function confirmarApt() {
+  if (!aptDetalhesAtual) return;
+  fecharModal('modal-detalhes');
+  aptDetalhesAtual.status = 'confirmado';
+  renderAgenda();
+  if (aptDetalhesAtual.id) {
+    try {
+      const res = await fetch(`${API_BASE}/agendamentos/${aptDetalhesAtual.id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'confirmado' }),
+      });
+      if (!res.ok) throw new Error(`Erro HTTP ${res.status}`);
+      mostrarSucesso('Agendamento confirmado!');
+    } catch (err) {
+      console.error('[EstéticaPro] Erro ao confirmar agendamento:', err);
+      mostrarErroAPI(`Falha ao confirmar agendamento: ${err.message}`);
+      await carregarDados(dataAtual);
+    }
+  }
+}
+
+async function cancelarApt() {
+  if (!aptDetalhesAtual) return;
+  fecharModal('modal-detalhes');
+  aptDetalhesAtual.status = 'cancelado';
+  renderAgenda();
+  if (aptDetalhesAtual.id) {
+    try {
+      const res = await fetch(`${API_BASE}/agendamentos/${aptDetalhesAtual.id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'cancelado' }),
+      });
+      if (!res.ok) throw new Error(`Erro HTTP ${res.status}`);
+      mostrarSucesso('Agendamento cancelado.');
+    } catch (err) {
+      console.error('[EstéticaPro] Erro ao cancelar agendamento:', err);
+      mostrarErroAPI(`Falha ao cancelar agendamento: ${err.message}`);
+      await carregarDados(dataAtual);
+    }
+  }
+}
+
+async function deletarApt() {
+  if (!aptDetalhesAtual) return;
+  if (!aptDetalhesAtual.id) {
+    // Sem ID (local), remove do array e re-renderiza
+    agendamentos = agendamentos.filter(a => a !== aptDetalhesAtual);
+    fecharModal('modal-detalhes');
+    renderAgenda();
+    return;
+  }
+  const confirmado = confirm(`Excluir o agendamento de "${aptDetalhesAtual.cliente}"? Esta ação não pode ser desfeita.`);
+  if (!confirmado) return;
+  fecharModal('modal-detalhes');
+  try {
+    const res = await fetch(`${API_BASE}/agendamentos/${aptDetalhesAtual.id}`, {
+      method: 'DELETE',
+    });
+    if (!res.ok) throw new Error(`Erro HTTP ${res.status}`);
+    mostrarSucesso('Agendamento excluído.');
+    await carregarDados(dataAtual);
+  } catch (err) {
+    console.error('[EstéticaPro] Erro ao deletar agendamento:', err);
+    mostrarErroAPI(`Não foi possível excluir o agendamento: ${err.message}`);
+  }
 }
 
 function setToggle(on) {
