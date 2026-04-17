@@ -1077,10 +1077,10 @@ function setToggle(on) {
 }
 
 function fecharModal(id) { document.getElementById(id).classList.remove('ativo'); }
-function voltarDia()  { dataAtual.setDate(dataAtual.getDate()-1);  renderAgenda(); renderMiniCal(); }
-function avancarDia() { dataAtual.setDate(dataAtual.getDate()+1);  renderAgenda(); renderMiniCal(); }
-function irHoje()     { dataAtual = new Date(2025,3,16);           renderAgenda(); renderMiniCal(); }
-function irDia(d)     { dataAtual.setDate(d);                      renderAgenda(); renderMiniCal(); }
+function voltarDia()  { dataAtual.setDate(dataAtual.getDate()-1);  carregarDados(dataAtual); }
+function avancarDia() { dataAtual.setDate(dataAtual.getDate()+1);  carregarDados(dataAtual); }
+function irHoje()     { dataAtual = new Date();                    carregarDados(dataAtual); }
+function irDia(d)     { dataAtual.setDate(d);                      carregarDados(dataAtual); }
 
 document.getElementById('toggle-encaixe').addEventListener('change', function() { setToggle(this.checked); });
 document.getElementById('modal-agendar').addEventListener('click', e => { if(e.target===e.currentTarget) fecharModal('modal-agendar'); });
