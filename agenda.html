@@ -493,28 +493,42 @@
         </div>
       </div>
 
+      <!-- Horário: minutos ajustáveis -->
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="field-label">Profissional</label>
-          <select id="sel-prof" class="field-input">
-            <option value="0">Ana Paula</option>
-            <option value="1">Carla Souza</option>
-            <option value="2">Júlia Mendes</option>
+          <label class="field-label">Minutos</label>
+          <select id="sel-min" class="field-input" onchange="modalMin = parseInt(this.value)">
+            <option value="0">:00</option>
+            <option value="15">:15</option>
+            <option value="30">:30</option>
+            <option value="45">:45</option>
           </select>
         </div>
         <div>
-          <label class="field-label">Procedimento</label>
-          <select class="field-input">
-            <option>Limpeza de Pele</option>
-            <option>Botox</option>
-            <option>Preenchimento Labial</option>
-            <option>Microagulhamento</option>
-            <option>Drenagem Linfática</option>
-            <option>Peeling Químico</option>
-            <option>Design de Sobrancelhas</option>
-            <option>Cílios (Lash Lifting)</option>
-            <option>Massagem Relaxante</option>
+          <label class="field-label">Duração</label>
+          <select id="sel-dur" class="field-input">
+            <option value="15">15 min</option>
+            <option value="30">30 min</option>
+            <option value="45">45 min</option>
+            <option value="60" selected>60 min</option>
+            <option value="90">90 min</option>
+            <option value="120">120 min</option>
+            <option value="180">180 min</option>
           </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="field-label">Profissional</label>
+          <select id="sel-prof" class="field-input"></select>
+        </div>
+        <div>
+          <label class="field-label">Procedimento</label>
+          <select id="sel-proc" class="field-input" onchange="aoSelecionarProcedimento(this)">
+            <option value="">Carregando...</option>
+          </select>
+          <div id="proc-valor-info" style="font-size:11px; color:var(--teal-dark); font-weight:600; margin-top:5px; display:none"></div>
         </div>
       </div>
 
