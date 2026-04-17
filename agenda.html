@@ -1280,8 +1280,8 @@ function mostrarTooltip(e, apt) {
   const mesNome = meses[data.getMonth()];
   const anoNum  = data.getFullYear();
   const diaSem  = diasSemana[data.getDay()];
-  const valor   = valorProcedimento[apt.proc] || 'R$ —';
-  const prof    = profissionais[apt.prof];
+  const valor   = apt.valor ? `R$ ${parseFloat(apt.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})}` : (valorProcedimento[apt.proc] || 'R$ —');
+  const prof    = profissionais[apt.prof] || { nome: '—', cor: '#9b87c4', bg: '#f0ecf9' };
 
   tooltip.innerHTML = `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
