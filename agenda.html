@@ -1079,17 +1079,26 @@ async function salvarApt() {
   const isEnc   = document.getElementById('toggle-encaixe').checked;
   const profIdx = parseInt(document.getElementById('sel-prof').value);
   const prof    = profissionais[profIdx];
-  const horaStr = `${String(modalHora).padStart(2,'0')}:${String(modalMin).padStart(2,'0')}`;
+  const duracao = parseInt(document.getElementById('sel-dur').value) || 60;
+  const minSel  = parseInt(document.getElementById('sel-min').value) || 0;
+
+  // Captura procedimento selecionado
+  const selProc = document.getElementById('sel-proc');
+  const procOpt = selProc ? selProc.options[selProc.selectedIndex] : null;
+  const procNome = procOpt ? procOpt.text : '';
+  const procValor = procOpt && procOpt.dataset.valor ? parseFloat(procOpt.dataset.valor) : null;
 
   const payload = {
     data:            dataParaISO(dataAtual),
-    hora:            horaStr,
-    dur:             60,
+    hora:            modalHora,
+    min:             minSel,
+    dur:             duracao,
     cliente_id:      clienteSelecionado.id,
     profissional_id: prof ? prof.id : null,
-    procedimento:    document.querySelector('#modal-agendar select').value,
+    procedimento:    procNome,
     status:          isEnc ? 'encaixe' : 'pendente',
     obs:             document.getElementById('obs-agendamento').value,
+    valor:           procValor,
   };
 
   try {
