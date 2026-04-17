@@ -1,6 +1,28 @@
 const db = require('./database');
 
 function seed() {
+  // Seed de procedimentos (independente dos outros dados)
+  const jaTemProcs = db.prepare('SELECT COUNT(*) as total FROM procedimentos').get();
+  if (jaTemProcs.total === 0) {
+    console.log('Populando tabela de procedimentos...');
+    const inserirProc = db.prepare(
+      'INSERT INTO procedimentos (nome, valor, dur) VALUES (?, ?, ?)'
+    );
+    const procs = [
+      { nome: 'Botox',                   valor: 350.00,  dur: 45  },
+      { nome: 'Limpeza de Pele',         valor: 180.00,  dur: 90  },
+      { nome: 'Design de Sobrancelha',   valor: 80.00,   dur: 30  },
+      { nome: 'Massagem Relaxante',      valor: 150.00,  dur: 60  },
+      { nome: 'Coloração',               valor: 220.00,  dur: 120 },
+      { nome: 'Micropigmentação',        valor: 600.00,  dur: 180 },
+    ];
+    const inserirTodosProcs = db.transaction(() => {
+      procs.forEach(p => inserirProc.run(p.nome, p.valor, p.dur));
+    });
+    inserirTodosProcs();
+    console.log(`${procs.length} procedimentos inseridos.`);
+  }
+
   // Não repopula se já houver dados
   const jaTemDados = db.prepare('SELECT COUNT(*) as total FROM profissionais').get();
   if (jaTemDados.total > 0) {
