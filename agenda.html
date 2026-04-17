@@ -153,6 +153,117 @@
     .autocomplete-item.add-new { color: var(--lavender); font-weight: 600; }
 
     .risco-card { background: var(--surface); border: 1px solid var(--border-soft); border-radius: 10px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; margin-bottom: 6px; box-shadow: var(--shadow-sm); }
+
+    /* ========== TOOLTIP DO CARD ========== */
+    #apt-tooltip {
+      position: fixed;
+      z-index: 9000;
+      width: 230px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow-lg);
+      padding: 14px 16px;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(6px) scale(0.97);
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+    #apt-tooltip.visivel {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    .tip-titulo {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 2px;
+    }
+    .tip-valor {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.4;
+    }
+    .tip-linha {
+      margin-bottom: 10px;
+    }
+    .tip-linha:last-child { margin-bottom: 0; }
+    .tip-divisor {
+      border: none;
+      border-top: 1px solid var(--border-soft);
+      margin: 10px 0;
+    }
+    .tip-badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .tip-badge.confirmado { background: #d8f5e8; color: #1a6640; }
+    .tip-badge.pendente   { background: #faefd0; color: #7a5010; }
+    .tip-badge.cancelado  { background: #fcdcdc; color: #8c2020; }
+    .tip-badge.noshow     { background: #e8e0f8; color: #4a2d8e; }
+    .tip-badge.encaixe    { background: #ceeee8; color: #1e6058; }
+
+    /* ========== MENU DE CONTEXTO ========== */
+    #ctx-menu {
+      position: fixed;
+      z-index: 9500;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow-lg);
+      padding: 8px 0;
+      min-width: 192px;
+      opacity: 0;
+      transform: scale(0.94) translateY(-4px);
+      transform-origin: top left;
+      transition: opacity 0.15s ease, transform 0.15s ease;
+      pointer-events: none;
+    }
+    #ctx-menu.visivel {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+      pointer-events: auto;
+    }
+    .ctx-titulo {
+      padding: 6px 14px 8px;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      border-bottom: 1px solid var(--border-soft);
+      margin-bottom: 4px;
+    }
+    .ctx-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .ctx-item:hover { background: var(--surface2); }
+    .ctx-item .ctx-dot {
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .ctx-item.ctx-confirmado .ctx-dot { background: #3daa72; }
+    .ctx-item.ctx-pendente   .ctx-dot { background: #c89030; }
+    .ctx-item.ctx-cancelado  .ctx-dot { background: #d06060; }
+    .ctx-item.ctx-noshow     .ctx-dot { background: #9070cc; }
+    .ctx-item.ctx-encaixe    .ctx-dot { background: var(--teal); }
+    .ctx-item .ctx-label { flex: 1; }
+    .ctx-item .ctx-ico { font-size: 14px; }
   </style>
 </head>
 <body>
