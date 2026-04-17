@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EstéticaPro — Agenda</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* Fundo off-white quente — sem brilho, sem cansar os olhos */
+      --bg:         #eeeae4;
+      --surface:    #f8f5f1;
+      --surface2:   #f0ece6;
+      --surface3:   #e6e0d8;
+      --border:     #d8d0c4;
+      --border-soft:#e2dbd2;
+
+      /* Lavanda — mais saturado, legível */
+      --lavender:   #7c5cbf;
+      --lavender-bg:#ede8f8;
+      --lavender-mid:#b8a8dc;
+      --lavender-dark:#5a3d9e;
+
+      /* Rosa — profundidade suficiente para texto */
+      --rose:       #b85678;
+      --rose-bg:    #fae8f0;
+      --rose-mid:   #dfa0bc;
+      --rose-dark:  #8c3358;
+
+      /* Teal / verde-água */
+      --teal:       #3d9e8e;
+      --teal-bg:    #e0f4f0;
+      --teal-mid:   #88cfc4;
+      --teal-dark:  #2a7268;
+
+      /* Âmbar / dourado */
+      --amber:      #b07e28;
+      --amber-bg:   #faf0d8;
+      --amber-mid:  #d4b060;
+
+      /* Texto com contraste real */
+      --text:       #1a1628;
+      --text-muted: #5c5470;
+      --text-dim:   #9c94b0;
+
+      --shadow-sm:  0 1px 4px rgba(0,0,0,0.08);
+      --shadow-md:  0 4px 16px rgba(0,0,0,0.10);
+      --shadow-lg:  0 12px 40px rgba(0,0,0,0.14);
+    }
+
+    * { font-family: 'Inter', sans-serif; box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: var(--surface2); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    /* STATUS CARDS — pastel com contraste legível */
+    .s-confirmado { background: #d8f5e8; color: #1a6640; border-left: 3px solid #3daa72; }
+    .s-pendente   { background: #faefd0; color: #7a5010; border-left: 3px solid #c89030; }
+    .s-cancelado  { background: #fcdcdc; color: #8c2020; border-left: 3px solid #d06060; }
+    .s-noshow     { background: #e8e0f8; color: #4a2d8e; border-left: 3px solid #9070cc; }
+    .s-encaixe    { background: #ceeee8; color: #1e6058; border-left: 3px solid #3d9e8e; }
+
+    .apt-card {
+      position: absolute; left: 3px; right: 3px;
+      border-radius: 8px; padding: 6px 9px;
+      font-size: 11px; overflow: hidden; cursor: pointer;
+      transition: box-shadow 0.15s, transform 0.12s;
+      box-shadow: var(--shadow-sm);
+    }
+    .apt-card:hover { box-shadow: var(--shadow-md); transform: scale(1.01); }
+
+    .slot-hora {
+      position: absolute; left: 0; right: 0;
+      border-top: 1px dashed var(--border-soft);
+      cursor: pointer; transition: background 0.1s; z-index: 1;
+    }
+    .slot-hora:hover { background: var(--lavender-bg); }
+    .slot-hora:hover::after {
+      content: '+ Agendar';
+      position: absolute; left: 8px; top: 5px;
+      font-size: 10px; color: var(--lavender); font-weight: 600;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--lavender), var(--rose));
+      color: white; border: none; cursor: pointer; font-weight: 600;
+      transition: opacity 0.15s, transform 0.1s; border-radius: 12px;
+    }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    .btn-ghost {
+      background: var(--surface3); color: var(--text-muted);
+      border: 1px solid var(--border); cursor: pointer; font-weight: 500;
+      border-radius: 12px; transition: background 0.1s;
+    }
+    .btn-ghost:hover { background: var(--border); }
+
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(30,27,46,0.35); z-index: 100;
+      align-items: center; justify-content: center;
+      backdrop-filter: blur(6px);
+    }
+    .modal-overlay.ativo { display: flex; }
+    .modal-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; width: 100%; max-width: 460px; margin: 16px;
+      box-shadow: var(--shadow-lg); overflow: hidden;
+    }
+    .modal-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border-soft);
+      background: linear-gradient(135deg, var(--lavender-bg), var(--rose-bg));
+    }
+
+    .field-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; display: block; }
+    .field-input {
+      width: 100%; background: var(--surface2); border: 1.5px solid var(--border);
+      color: var(--text); border-radius: 10px; padding: 10px 14px; font-size: 13px;
+      outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .field-input:focus { border-color: var(--lavender); box-shadow: 0 0 0 3px var(--lavender-bg); }
+    .field-input::placeholder { color: var(--text-dim); }
+    select.field-input { cursor: pointer; }
+
+    .tag-ia {
+      background: linear-gradient(135deg, var(--lavender), var(--rose));
+      color: white; font-size: 10px; padding: 2px 7px;
+      border-radius: 20px; font-weight: 700; letter-spacing: 0.3px;
+    }
+
+    .nav-item { padding: 7px 14px; border-radius: 10px; font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.12s; color: var(--text-muted); }
+    .nav-item:hover { background: var(--surface2); color: var(--text); }
+    .nav-item.active { background: var(--lavender-bg); color: var(--lavender); font-weight: 600; }
+
+    .stat-card { background: var(--surface); border: 1px solid var(--border-soft); border-radius: 12px; padding: 14px; box-shadow: var(--shadow-sm); }
+
+    .autocomplete-list {
+      position: absolute; left: 0; right: 0; top: 100%;
+      background: var(--surface); border: 1.5px solid var(--border);
+      border-radius: 12px; margin-top: 4px; z-index: 200;
+      box-shadow: var(--shadow-md); overflow: hidden;
+    }
+    .autocomplete-item {
+      padding: 10px 14px; font-size: 13px; cursor: pointer;
+      border-bottom: 1px solid var(--border-soft); transition: background 0.1s;
+    }
+    .autocomplete-item:hover { background: var(--surface2); }
+    .autocomplete-item:last-child { border-bottom: none; }
+    .autocomplete-item.add-new { color: var(--lavender); font-weight: 600; }
+
+    .risco-card { background: var(--surface); border: 1px solid var(--border-soft); border-radius: 10px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; margin-bottom: 6px; box-shadow: var(--shadow-sm); }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header style="background:var(--surface); border-bottom:1px solid var(--border); box-shadow:0 1px 6px rgba(0,0,0,0.09)" class="px-6 py-3 flex items-center justify-between sticky top-0 z-40">
+  <!-- LOGO -->
+  <div class="flex items-center gap-3">
+    <svg width="36" height="36" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="40" height="40" rx="10" fill="url(#logoRect)"/>
+      <defs>
+        <linearGradient id="logoRect" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#d4cbe8"/>
+          <stop offset="100%" stop-color="#f0b8cc"/>
+        </linearGradient>
+      </defs>
+      <!-- flor de lótus simplificada -->
+      <path d="M20 6 C20 6 15 13 15 19 C15 22.5 17.2 25 20 25 C22.8 25 25 22.5 25 19 C25 13 20 6 20 6Z" fill="white" opacity="0.9"/>
+      <path d="M20 10 C20 10 10 13 8 20 C7 24 9.5 27 13 27 C16.5 27 19 23 19.5 18 C20 14 20 10 20 10Z" fill="white" opacity="0.6"/>
+      <path d="M20 10 C20 10 30 13 32 20 C33 24 30.5 27 27 27 C23.5 27 21 23 20.5 18 C20 14 20 10 20 10Z" fill="white" opacity="0.6"/>
+      <path d="M16 27 Q20 31 24 27" stroke="white" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.7"/>
+    </svg>
+    <div>
+      <span style="font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:600; color:var(--text); letter-spacing:0.3px">Estética</span><span style="font-family:'Inter',sans-serif; font-size:13px; font-weight:700; color:var(--lavender); letter-spacing:2px; margin-left:2px">PRO</span>
+    </div>
+  </div>
+
+  <nav class="hidden md:flex items-center gap-1">
+    <div class="nav-item active">Agenda</div>
+    <div class="nav-item">Clientes</div>
+    <div class="nav-item">Financeiro</div>
+    <div class="nav-item">Relatórios</div>
+    <div class="nav-item">WhatsApp IA</div>
+  </nav>
+
+  <div class="flex items-center gap-3">
+    <button class="relative p-2 rounded-xl" style="background:var(--surface2); border:1px solid var(--border)">
+      <svg width="17" height="17" fill="none" stroke="var(--text-muted)" stroke-width="2" viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+      <span class="absolute top-1 right-1 w-2 h-2 rounded-full" style="background:var(--rose)"></span>
+    </button>
+    <div class="flex items-center gap-2 cursor-pointer p-1.5 rounded-xl hover:bg-gray-50">
+      <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold text-white" style="background: linear-gradient(135deg, var(--lavender), var(--rose))">C</div>
+      <div class="hidden md:block">
+        <p style="font-size:12px; font-weight:600; color:var(--text); line-height:1.2">Clínica Bella</p>
+        <p style="font-size:10px; color:var(--text-muted)">Administrador</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- LAYOUT -->
+<div class="flex" style="height:calc(100vh - 57px)">
+
+  <!-- SIDEBAR -->
+  <aside style="width:272px; background:var(--surface); border-right:1px solid var(--border); flex-shrink:0; overflow-y:auto" class="p-4 hidden lg:block">
+
+    <!-- Mini Calendar -->
+    <div class="mb-5">
+      <div class="flex items-center justify-between mb-3">
+        <span style="font-size:13px; font-weight:600; color:var(--text)" id="mini-cal-titulo">Abril 2025</span>
+        <div class="flex gap-1">
+          <button onclick="voltarDia()" class="p-1.5 rounded-lg" style="background:var(--surface2); border:1px solid var(--border)">
+            <svg width="11" height="11" fill="none" stroke="var(--text-muted)" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <button onclick="avancarDia()" class="p-1.5 rounded-lg" style="background:var(--surface2); border:1px solid var(--border)">
+            <svg width="11" height="11" fill="none" stroke="var(--text-muted)" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="grid grid-cols-7 text-center mb-1.5" style="font-size:10px; color:var(--text-muted); font-weight:600">
+        <span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span>
+      </div>
+      <div class="grid grid-cols-7 text-center gap-y-1" id="mini-cal"></div>
+    </div>
+
+    <hr style="border-color:var(--border-soft)" class="my-4" />
+
+    <!-- Profissionais -->
+    <div class="mb-5">
+      <p style="font-size:10px; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.8px" class="mb-3">Profissionais</p>
+      <div class="space-y-2.5">
+        <label class="flex items-center gap-2.5 cursor-pointer">
+          <input type="checkbox" checked style="accent-color:var(--lavender); width:15px; height:15px" />
+          <div class="w-2 h-2 rounded-full" style="background:var(--lavender)"></div>
+          <span style="font-size:13px; color:var(--text)">Ana Paula</span>
+        </label>
+        <label class="flex items-center gap-2.5 cursor-pointer">
+          <input type="checkbox" checked style="accent-color:var(--rose); width:15px; height:15px" />
+          <div class="w-2 h-2 rounded-full" style="background:var(--rose)"></div>
+          <span style="font-size:13px; color:var(--text)">Carla Souza</span>
+        </label>
+        <label class="flex items-center gap-2.5 cursor-pointer">
+          <input type="checkbox" checked style="accent-color:var(--teal); width:15px; height:15px" />
+          <div class="w-2 h-2 rounded-full" style="background:var(--teal)"></div>
+          <span style="font-size:13px; color:var(--text)">Júlia Mendes</span>
+        </label>
+      </div>
+    </div>
+
+    <hr style="border-color:var(--border-soft)" class="my-4" />
+
+    <!-- Resumo -->
+    <div class="mb-5">
+      <p style="font-size:10px; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.8px" class="mb-3">Resumo de Hoje</p>
+      <div class="space-y-2">
+        <div class="stat-card">
+          <div class="flex justify-between items-center">
+            <span style="font-size:11px; color:var(--text-muted)">Agendamentos</span>
+            <span style="font-size:22px; font-weight:700; color:var(--text)">12</span>
+          </div>
+          <div class="mt-2 rounded-full h-1.5" style="background:var(--surface3)">
+            <div class="h-1.5 rounded-full" style="background:linear-gradient(90deg,var(--lavender),var(--rose));width:75%"></div>
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <div class="stat-card text-center" style="padding:10px 6px">
+            <div style="font-size:18px; font-weight:700; color:#2d7a56">8</div>
+            <div style="font-size:9px; color:var(--text-muted); margin-top:2px">Confirm.</div>
+          </div>
+          <div class="stat-card text-center" style="padding:10px 6px">
+            <div style="font-size:18px; font-weight:700; color:#9a6f20">3</div>
+            <div style="font-size:9px; color:var(--text-muted); margin-top:2px">Pendente</div>
+          </div>
+          <div class="stat-card text-center" style="padding:10px 6px">
+            <div style="font-size:18px; font-weight:700; color:var(--rose)">1</div>
+            <div style="font-size:9px; color:var(--text-muted); margin-top:2px">No-show</div>
+          </div>
+        </div>
+        <!-- Alerta IA -->
+        <div class="stat-card" style="border-color:var(--lavender-mid); background:var(--lavender-bg)">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="tag-ia">IA</span>
+            <span style="font-size:11px; color:var(--lavender-dark); font-weight:600">Anti No-show</span>
+          </div>
+          <p style="font-size:11px; color:var(--text-muted); line-height:1.5">3 clientes pendentes. Enviar lembrete agora?</p>
+          <button onclick="alert('Lembretes enviados via WhatsApp!')" class="mt-2 w-full py-1.5 rounded-lg text-xs font-bold btn-primary">
+            Disparar Lembretes
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <hr style="border-color:var(--border-soft)" class="my-4" />
+
+    <!-- Clientes em risco -->
+    <div>
+      <div class="flex items-center justify-between mb-1">
+        <p style="font-size:10px; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.8px">Clientes em Risco</p>
+        <span class="tag-ia" style="font-size:9px">IA</span>
+      </div>
+      <p style="font-size:10px; color:var(--text-dim); margin-bottom:10px; line-height:1.5">30+ dias sem visita <strong style="color:var(--text-muted)">e sem retorno marcado</strong></p>
+      <div id="lista-risco"></div>
+    </div>
+
+  </aside>
+
+  <!-- AGENDA -->
+  <main class="flex-1 flex flex-col overflow-hidden">
+
+    <!-- Toolbar -->
+    <div style="background:var(--surface); border-bottom:1px solid var(--border); box-shadow:var(--shadow-sm)" class="px-5 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <button onclick="voltarDia()" class="p-2 rounded-xl btn-ghost">
+          <svg width="13" height="13" fill="none" stroke="var(--text-muted)" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <button onclick="irHoje()" class="px-3 py-1.5 rounded-xl text-xs font-semibold btn-ghost">Hoje</button>
+        <button onclick="avancarDia()" class="p-2 rounded-xl btn-ghost">
+          <svg width="13" height="13" fill="none" stroke="var(--text-muted)" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+        <h2 style="font-size:14px; font-weight:600; color:var(--text)" id="data-titulo"></h2>
+      </div>
+      <!-- Legenda de status -->
+      <div class="hidden md:flex items-center gap-3">
+        <span style="font-size:10px; display:flex; align-items:center; gap:4px; color:#2d7a56">
+          <span style="width:8px;height:8px;border-radius:50%;background:#6fcfa0;display:inline-block"></span> Confirmado
+        </span>
+        <span style="font-size:10px; display:flex; align-items:center; gap:4px; color:#9a6f20">
+          <span style="width:8px;height:8px;border-radius:50%;background:#f0c060;display:inline-block"></span> Pendente
+        </span>
+        <span style="font-size:10px; display:flex; align-items:center; gap:4px; color:#6b5494">
+          <span style="width:8px;height:8px;border-radius:50%;background:var(--lavender-mid);display:inline-block"></span> No-show
+        </span>
+        <span style="font-size:10px; display:flex; align-items:center; gap:4px; color:#3d8a7e">
+          <span style="width:8px;height:8px;border-radius:50%;background:var(--teal-mid);display:inline-block"></span> Encaixe
+        </span>
+      </div>
+      <div style="font-size:11px; color:var(--text-dim)" class="hidden lg:block">Clique no horário para agendar</div>
+    </div>
+
+    <!-- Grade -->
+    <div class="flex-1 overflow-auto p-3" style="background:var(--bg)">
+      <div class="flex gap-2" id="agenda-inner" style="min-width:560px"></div>
+    </div>
+  </main>
+</div>
+
+<!-- MODAL AGENDAMENTO -->
+<div class="modal-overlay" id="modal-agendar">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 style="font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:600; color:var(--lavender)">Novo Agendamento</h3>
+          <p id="modal-horario-label" style="font-size:12px; color:var(--text-muted)" class="mt-0.5"></p>
+        </div>
+        <button onclick="fecharModal('modal-agendar')" class="p-2 rounded-xl btn-ghost">
+          <svg width="13" height="13" fill="none" stroke="var(--text-muted)" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+    <div style="padding:20px 24px" class="space-y-4">
+
+      <!-- Cliente -->
+      <div>
+        <label class="field-label">Cliente</label>
+        <div class="relative">
+          <input id="busca-cliente" type="text" placeholder="Digite o nome da cliente..." class="field-input" autocomplete="off" oninput="buscarCliente(this.value)" />
+          <div id="lista-autocomplete" class="autocomplete-list" style="display:none"></div>
+        </div>
+        <div id="cliente-selecionado" style="display:none; margin-top:8px; background:var(--lavender-bg); border:1.5px solid var(--lavender-mid); border-radius:10px; padding:10px 12px; gap:10px; align-items:center" class="flex">
+          <div id="cs-avatar" class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style="background:linear-gradient(135deg,var(--lavender),var(--rose))"></div>
+          <div class="flex-1">
+            <p id="cs-nome" style="font-size:12px; font-weight:600; color:var(--text)"></p>
+            <p id="cs-tel" style="font-size:10px; color:var(--text-muted)"></p>
+          </div>
+          <button onclick="limparCliente()" style="color:var(--text-muted); font-size:12px; background:none; border:none; cursor:pointer">✕</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="field-label">Profissional</label>
+          <select id="sel-prof" class="field-input">
+            <option value="0">Ana Paula</option>
+            <option value="1">Carla Souza</option>
+            <option value="2">Júlia Mendes</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label">Procedimento</label>
+          <select class="field-input">
+            <option>Limpeza de Pele</option>
+            <option>Botox</option>
+            <option>Preenchimento Labial</option>
+            <option>Microagulhamento</option>
+            <option>Drenagem Linfática</option>
+            <option>Peeling Químico</option>
+            <option>Design de Sobrancelhas</option>
+            <option>Cílios (Lash Lifting)</option>
+            <option>Massagem Relaxante</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Encaixe toggle -->
+      <div class="flex items-center justify-between p-3 rounded-xl" style="background:var(--teal-bg); border:1.5px solid var(--teal-mid)">
+        <div>
+          <p style="font-size:12px; font-weight:600; color:var(--teal-dark)">Marcar como Encaixe</p>
+          <p style="font-size:10px; color:var(--text-muted); margin-top:2px">Horário fora da grade ou urgência</p>
+        </div>
+        <label style="position:relative; display:inline-flex; align-items:center; cursor:pointer; flex-shrink:0">
+          <input type="checkbox" id="toggle-encaixe" style="display:none" />
+          <div id="toggle-track" style="width:40px;height:22px;border-radius:11px;background:var(--border);border:1.5px solid var(--border);transition:background 0.2s;position:relative">
+            <div id="toggle-thumb" style="position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:white;transition:left 0.2s;box-shadow:var(--shadow-sm)"></div>
+          </div>
+        </label>
+      </div>
+
+      <!-- Observações -->
+      <div>
+        <label class="field-label">Observações</label>
+        <textarea id="obs-agendamento" class="field-input" rows="2" placeholder="Pele sensível, alergias, preferências..."></textarea>
+      </div>
+
+      <!-- Aviso IA -->
+      <div class="flex items-start gap-3 p-3 rounded-xl" style="background:var(--lavender-bg); border:1px solid var(--lavender-mid)">
+        <span class="tag-ia flex-shrink-0" style="margin-top:1px">IA</span>
+        <p style="font-size:11px; color:var(--lavender-dark); line-height:1.5; font-weight:500">Lembretes automáticos serão enviados via WhatsApp: 48h, 24h e 2h antes.</p>
+      </div>
+
+      <div class="flex gap-2">
+        <button onclick="fecharModal('modal-agendar')" class="flex-1 py-2.5 text-sm btn-ghost">Cancelar</button>
+        <button onclick="salvarApt()" class="flex-1 py-2.5 text-sm btn-primary">Confirmar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOVA CLIENTE -->
+<div class="modal-overlay" id="modal-cliente">
+  <div class="modal-box">
+    <div class="modal-header" style="background:linear-gradient(135deg,var(--rose-bg),var(--lavender-bg))">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 style="font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:600; color:var(--rose)">Nova Cliente</h3>
+          <p style="font-size:12px; color:var(--text-muted)" class="mt-0.5">Preencha os dados para cadastrar</p>
+        </div>
+        <button onclick="fecharModal('modal-cliente')" class="p-2 rounded-xl btn-ghost">
+          <svg width="13" height="13" fill="none" stroke="var(--text-muted)" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+    <div style="padding:20px 24px" class="space-y-4">
+      <div>
+        <label class="field-label">Nome Completo</label>
+        <input id="nc-nome" type="text" placeholder="Nome completo da cliente" class="field-input" />
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="field-label">CPF</label>
+          <input id="nc-cpf" type="text" placeholder="000.000.000-00" class="field-input" oninput="mascaraCPF(this)" maxlength="14" />
+        </div>
+        <div>
+          <label class="field-label">Telefone / WhatsApp</label>
+          <input id="nc-tel" type="text" placeholder="(11) 99999-0000" class="field-input" oninput="mascaraTel(this)" maxlength="15" />
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="field-label">E-mail (opcional)</label>
+          <input type="email" placeholder="email@exemplo.com" class="field-input" />
+        </div>
+        <div>
+          <label class="field-label">Nascimento</label>
+          <input type="date" class="field-input" />
+        </div>
+      </div>
+      <div>
+        <label class="field-label">Observações Gerais</label>
+        <textarea class="field-input" rows="2" placeholder="Alergias, condições de saúde, preferências..."></textarea>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="fecharModal('modal-cliente')" class="flex-1 py-2.5 text-sm btn-ghost">Voltar</button>
+        <button onclick="cadastrarCliente()" class="flex-1 py-2.5 text-sm btn-primary">Cadastrar e Agendar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALHES -->
+<div class="modal-overlay" id="modal-detalhes">
+  <div class="modal-box" style="max-width:380px">
+    <div class="modal-header" id="det-header">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div id="det-avatar" class="w-10 h-10 rounded-full flex items-center justify-center text-base font-bold text-white" style="background:linear-gradient(135deg,var(--lavender),var(--rose))"></div>
+          <div>
+            <p id="det-nome" style="font-size:15px; font-weight:600; color:var(--text)"></p>
+            <p id="det-status-chip" style="font-size:10px; margin-top:2px"></p>
+          </div>
+        </div>
+        <button onclick="fecharModal('modal-detalhes')" class="p-2 rounded-xl btn-ghost">
+          <svg width="13" height="13" fill="none" stroke="var(--text-muted)" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+    <div style="padding:20px 24px" class="space-y-3">
+      <div class="grid grid-cols-2 gap-3">
+        <div style="background:var(--surface2); border-radius:10px; padding:12px">
+          <p style="font-size:10px; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.5px">Procedimento</p>
+          <p id="det-proc" style="font-size:13px; font-weight:600; color:var(--text); margin-top:4px"></p>
+        </div>
+        <div style="background:var(--surface2); border-radius:10px; padding:12px">
+          <p style="font-size:10px; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.5px">Horário</p>
+          <p id="det-hora" style="font-size:13px; font-weight:600; color:var(--text); margin-top:4px"></p>
+        </div>
+      </div>
+      <div id="det-obs-box" style="display:none; background:var(--amber-bg); border:1px solid #e8d098; border-radius:10px; padding:12px">
+        <p style="font-size:10px; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px">Observações</p>
+        <p id="det-obs" style="font-size:12px; color:var(--text); line-height:1.5"></p>
+      </div>
+      <!-- Ações -->
+      <div class="grid grid-cols-3 gap-2 pt-1">
+        <button onclick="fecharModal('modal-detalhes')" class="py-2 text-xs font-semibold rounded-xl" style="background:var(--teal-bg); color:var(--teal-dark); border:1px solid var(--teal-mid)">✓ Confirmar</button>
+        <button onclick="fecharModal('modal-detalhes')" class="py-2 text-xs font-semibold rounded-xl" style="background:var(--amber-bg); color:var(--amber); border:1px solid var(--amber-mid)">↻ Remarcar</button>
+        <button onclick="fecharModal('modal-detalhes')" class="py-2 text-xs font-semibold rounded-xl" style="background:#fcdcdc; color:#8c2020; border:1px solid #d06060">✕ Cancelar</button>
+      </div>
+      <!-- Lembrete WhatsApp -->
+      <button onclick="alert('Lembrete enviado via WhatsApp!')" class="w-full py-2.5 text-sm btn-primary">
+        Enviar Lembrete WhatsApp
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const HORA_INICIO = 8, HORAS = 12, SLOT_H = 68;
+
+const profissionais = [
+  { nome: 'Ana Paula',    cor: '#9b87c4', bg: '#f0ecf9' },
+  { nome: 'Carla Souza',  cor: '#c97a95', bg: '#fceef4' },
+  { nome: 'Júlia Mendes', cor: '#6ab4a8', bg: '#eaf6f4' },
+];
+
+const clientes = [
+  { nome: 'Mariana Costa',   tel: '(11) 99201-3344', cpf: '123.456.789-00' },
+  { nome: 'Letícia Alves',   tel: '(11) 98877-2211', cpf: '234.567.890-11' },
+  { nome: 'Patrícia Nunes',  tel: '(11) 97766-5500', cpf: '345.678.901-22' },
+  { nome: 'Gabriela Lima',   tel: '(11) 96655-4433', cpf: '456.789.012-33' },
+  { nome: 'Amanda Rocha',    tel: '(11) 95544-3322', cpf: '567.890.123-44' },
+  { nome: 'Isabela Freitas', tel: '(11) 94433-2211', cpf: '678.901.234-55' },
+  { nome: 'Renata Oliveira', tel: '(11) 93322-1100', cpf: '789.012.345-66' },
+  { nome: 'Camila Santos',   tel: '(11) 92211-0099', cpf: '890.123.456-77' },
+];
+
+const historicoClientes = [
+  { nome: 'Mariana Silva',   diasSemVisita: 45, retornoMarcado: false, tel: '(11) 91122-3344' },
+  { nome: 'Fernanda Lima',   diasSemVisita: 32, retornoMarcado: false, tel: '(11) 92233-4455' },
+  { nome: 'Juliana Prado',   diasSemVisita: 38, retornoMarcado: true,  tel: '(11) 93344-5566', proximoApt: '22/04' },
+  { nome: 'Priscila Torres', diasSemVisita: 60, retornoMarcado: false, tel: '(11) 94455-6677' },
+  { nome: 'Roberta Melo',    diasSemVisita: 28, retornoMarcado: false, tel: '(11) 95566-7788' },
+  { nome: 'Sandra Vaz',      diasSemVisita: 50, retornoMarcado: true,  tel: '(11) 96677-8899', proximoApt: '25/04' },
+];
+
+let agendamentos = [
+  { hora:9,  min:0,  dur:60, cliente:'Mariana Costa',   proc:'Limpeza de Pele',        status:'confirmado', prof:0, obs:'' },
+  { hora:9,  min:30, dur:45, cliente:'Letícia Alves',   proc:'Design de Sobrancelhas', status:'confirmado', prof:1, obs:'' },
+  { hora:10, min:0,  dur:90, cliente:'Patrícia Nunes',  proc:'Botox',                  status:'pendente',   prof:2, obs:'Primeira vez com botox, ansiedade elevada' },
+  { hora:10, min:30, dur:60, cliente:'Gabriela Lima',   proc:'Preenchimento Labial',   status:'confirmado', prof:0, obs:'' },
+  { hora:11, min:0,  dur:30, cliente:'Amanda Rocha',    proc:'Cílios (Lash Lifting)',  status:'pendente',   prof:1, obs:'' },
+  { hora:11, min:30, dur:60, cliente:'Isabela Freitas', proc:'Peeling Químico',        status:'confirmado', prof:2, obs:'Pele sensível, usar fator 50' },
+  { hora:13, min:0,  dur:60, cliente:'Renata Oliveira', proc:'Microagulhamento',       status:'confirmado', prof:0, obs:'' },
+  { hora:13, min:30, dur:45, cliente:'Camila Santos',   proc:'Drenagem Linfática',     status:'noshow',     prof:1, obs:'Já deu no-show em jan/25' },
+  { hora:14, min:0,  dur:60, cliente:'Fernanda Dias',   proc:'Massagem Relaxante',     status:'confirmado', prof:2, obs:'' },
+  { hora:14, min:30, dur:90, cliente:'Beatriz Mendes',  proc:'Botox',                  status:'encaixe',    prof:0, obs:'Encaixe de urgência' },
+  { hora:15, min:0,  dur:45, cliente:'Carolina Pires',  proc:'Limpeza de Pele',        status:'pendente',   prof:1, obs:'' },
+  { hora:16, min:0,  dur:60, cliente:'Tatiana Borges',  proc:'Preenchimento Labial',   status:'confirmado', prof:2, obs:'' },
+];
+
+let dataAtual = new Date(2025, 3, 16);
+let modalHora = 8, modalMin = 0, modalProf = 0;
+let clienteSelecionado = null;
+
+const diasSemana = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+function formatarData(d) {
+  return `${diasSemana[d.getDay()]}, ${d.getDate()} de ${meses[d.getMonth()]}`;
+}
+
+function renderAgenda() {
+  document.getElementById('data-titulo').textContent = formatarData(dataAtual);
+  const inner = document.getElementById('agenda-inner');
+  inner.innerHTML = '';
+
+  // Coluna horas
+  const horasDiv = document.createElement('div');
+  horasDiv.style.cssText = 'width:48px; flex-shrink:0; padding-top:44px';
+  for (let i = 0; i < HORAS; i++) {
+    const h = HORA_INICIO + i;
+    const el = document.createElement('div');
+    el.style.cssText = `height:${SLOT_H}px; display:flex; align-items:flex-start; padding-top:5px; justify-content:flex-end; padding-right:8px`;
+    el.innerHTML = `<span style="font-size:10px; color:var(--text-dim); font-weight:500">${String(h).padStart(2,'0')}:00</span>`;
+    horasDiv.appendChild(el);
+  }
+  inner.appendChild(horasDiv);
+
+  const grid = document.createElement('div');
+  grid.style.cssText = `flex:1; display:grid; grid-template-columns:repeat(${profissionais.length},1fr); gap:8px`;
+
+  profissionais.forEach((prof, pi) => {
+    const col = document.createElement('div');
+
+    // Header profissional
+    const hdr = document.createElement('div');
+    hdr.style.cssText = `height:40px; display:flex; align-items:center; gap:8px; padding:0 12px; border-radius:12px; margin-bottom:4px; background:${prof.bg}; border:1px solid ${prof.cor}30`;
+    hdr.innerHTML = `
+      <div style="width:26px;height:26px;border-radius:50%;background:${prof.cor}30;color:${prof.cor};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">${prof.nome[0]}</div>
+      <span style="font-size:12px;font-weight:600;color:${prof.cor}">${prof.nome}</span>
+      <span style="margin-left:auto;font-size:10px;color:var(--text-dim)">${agendamentos.filter(a=>a.prof===pi).length}</span>`;
+    col.appendChild(hdr);
+
+    // Corpo
+    const corpo = document.createElement('div');
+    corpo.style.cssText = `position:relative; height:${HORAS * SLOT_H}px; border-radius:12px; overflow:hidden; background:var(--surface); border:1px solid var(--border-soft); box-shadow:var(--shadow-sm)`;
+
+    // Slots
+    for (let i = 0; i < HORAS; i++) {
+      const slot = document.createElement('div');
+      slot.className = 'slot-hora';
+      slot.style.cssText = `top:${i * SLOT_H}px; height:${SLOT_H}px`;
+      const h = HORA_INICIO + i;
+      slot.addEventListener('click', () => abrirModalHora(h, 0, pi));
+      corpo.appendChild(slot);
+
+      const meio = document.createElement('div');
+      meio.style.cssText = `position:absolute;left:0;right:0;top:${i*SLOT_H + SLOT_H/2}px;border-top:1px dashed var(--border-soft);pointer-events:none;z-index:0`;
+      corpo.appendChild(meio);
+    }
+
+    // Agendamentos
+    agendamentos.filter(a => a.prof === pi).forEach(apt => {
+      const top = (apt.hora - HORA_INICIO) * SLOT_H + (apt.min / 60) * SLOT_H;
+      const height = Math.max((apt.dur / 60) * SLOT_H - 5, 28);
+      const card = document.createElement('div');
+      card.className = `apt-card s-${apt.status}`;
+      card.style.cssText += `top:${top+2}px; height:${height}px; z-index:10`;
+      card.innerHTML = `
+        <div style="font-weight:700;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${apt.cliente}</div>
+        <div style="opacity:0.7;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${apt.proc}</div>
+        ${height > 46 ? `<div style="font-size:9px;opacity:0.5;margin-top:2px">${String(apt.hora).padStart(2,'0')}:${String(apt.min).padStart(2,'0')} · ${apt.dur}min</div>` : ''}
+        ${apt.obs && height > 58 ? `<div style="font-size:9px;opacity:0.5;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📝 ${apt.obs}</div>` : ''}`;
+      card.addEventListener('click', e => { e.stopPropagation(); verDetalhes(apt); });
+      corpo.appendChild(card);
+    });
+
+    col.appendChild(corpo);
+    grid.appendChild(col);
+  });
+
+  inner.appendChild(grid);
+}
+
+function renderMiniCal() {
+  const d = dataAtual;
+  document.getElementById('mini-cal-titulo').textContent = `${meses[d.getMonth()]} ${d.getFullYear()}`;
+  const cal = document.getElementById('mini-cal');
+  const primeiro = new Date(d.getFullYear(), d.getMonth(), 1).getDay();
+  const dias = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+  let html = '';
+  for (let i = 0; i < primeiro; i++) html += '<span></span>';
+  for (let dd = 1; dd <= dias; dd++) {
+    const sel = dd === d.getDate();
+    html += `<span onclick="irDia(${dd})" style="cursor:pointer;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:11px;font-weight:${sel?'700':'400'};
+      ${sel ? 'background:var(--lavender);color:white' : 'color:var(--text-muted)'}">${dd}</span>`;
+  }
+  cal.innerHTML = html;
+}
+
+function renderRisco() {
+  const emRisco = historicoClientes.filter(c => c.diasSemVisita >= 30 && !c.retornoMarcado);
+  const el = document.getElementById('lista-risco');
+  if (!el) return;
+  if (!emRisco.length) {
+    el.innerHTML = `<div style="font-size:11px;color:#1a6640;padding:10px;text-align:center;background:#d8f5e8;border-radius:10px;font-weight:600">✅ Nenhuma cliente em risco</div>`;
+    return;
+  }
+  el.innerHTML = emRisco.map(c => {
+    const urgente = c.diasSemVisita >= 45;
+    const cor = urgente ? { border:'#d06060', bg:'#fcdcdc', text:'#8c2020' } : { border:'#c89030', bg:'#faefd0', text:'#7a5010' };
+    return `<div class="risco-card" style="border-color:${cor.border}">
+      <div style="width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;background:${cor.bg};color:${cor.text}">${c.nome[0]}</div>
+      <div style="flex:1;min-width:0">
+        <p style="font-size:11px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${urgente ? '🔴' : '🟡'} ${c.nome}</p>
+        <p style="font-size:10px;color:${cor.text}">${c.diasSemVisita} dias · sem retorno marcado</p>
+      </div>
+      <button onclick="alert('Mensagem enviada para ${c.nome}!')" style="background:${cor.bg};color:${cor.text};border:1px solid ${cor.border};border-radius:8px;padding:4px 8px;font-size:10px;font-weight:600;cursor:pointer;flex-shrink:0">Chamar</button>
+    </div>`;
+  }).join('');
+}
+
+function abrirModalHora(h, m, pi) {
+  modalHora = h; modalMin = m; modalProf = pi;
+  clienteSelecionado = null;
+  document.getElementById('busca-cliente').value = '';
+  document.getElementById('lista-autocomplete').style.display = 'none';
+  document.getElementById('cliente-selecionado').style.display = 'none';
+  document.getElementById('sel-prof').value = pi;
+  document.getElementById('toggle-encaixe').checked = false;
+  setToggle(false);
+  document.getElementById('obs-agendamento').value = '';
+  document.getElementById('modal-horario-label').textContent =
+    `${formatarData(dataAtual)} · ${String(h).padStart(2,'0')}:00 — ${profissionais[pi].nome}`;
+  document.getElementById('modal-agendar').classList.add('ativo');
+}
+
+function buscarCliente(val) {
+  const lista = document.getElementById('lista-autocomplete');
+  if (!val || val.length < 2) { lista.style.display = 'none'; return; }
+  const enc = clientes.filter(c => c.nome.toLowerCase().includes(val.toLowerCase()));
+  lista.innerHTML = enc.map(c => `
+    <div class="autocomplete-item" onclick="selecionarCliente('${c.nome.replace(/'/g,"\\'")}')">
+      <div style="font-weight:600;font-size:12px;color:var(--text)">${c.nome}</div>
+      <div style="font-size:10px;color:var(--text-muted)">${c.tel}</div>
+    </div>`).join('') +
+    `<div class="autocomplete-item add-new" onclick="abrirNovaCliente('${val.replace(/'/g,"\\'")}')">
+      + Cadastrar "${val}" como nova cliente
+    </div>`;
+  lista.style.display = 'block';
+}
+
+function selecionarCliente(nome) {
+  clienteSelecionado = clientes.find(c => c.nome === nome);
+  document.getElementById('busca-cliente').value = nome;
+  document.getElementById('lista-autocomplete').style.display = 'none';
+  document.getElementById('cliente-selecionado').style.display = 'flex';
+  document.getElementById('cs-avatar').textContent = clienteSelecionado.nome[0];
+  document.getElementById('cs-nome').textContent = clienteSelecionado.nome;
+  document.getElementById('cs-tel').textContent = clienteSelecionado.tel + ' · ' + clienteSelecionado.cpf;
+}
+
+function limparCliente() {
+  clienteSelecionado = null;
+  document.getElementById('busca-cliente').value = '';
+  document.getElementById('cliente-selecionado').style.display = 'none';
+}
+
+function abrirNovaCliente(v) {
+  document.getElementById('lista-autocomplete').style.display = 'none';
+  document.getElementById('nc-nome').value = v || '';
+  document.getElementById('nc-cpf').value = '';
+  document.getElementById('nc-tel').value = '';
+  document.getElementById('modal-cliente').classList.add('ativo');
+}
+
+function cadastrarCliente() {
+  const nome = document.getElementById('nc-nome').value.trim();
+  const cpf  = document.getElementById('nc-cpf').value.trim();
+  const tel  = document.getElementById('nc-tel').value.trim();
+  if (!nome || !cpf || !tel) { alert('Preencha nome, CPF e telefone.'); return; }
+  clientes.push({ nome, cpf, tel });
+  fecharModal('modal-cliente');
+  selecionarCliente(nome);
+}
+
+function salvarApt() {
+  if (!clienteSelecionado) { alert('Selecione ou cadastre uma cliente primeiro.'); return; }
+  const isEnc = document.getElementById('toggle-encaixe').checked;
+  agendamentos.push({
+    hora: modalHora, min: modalMin, dur: 60,
+    cliente: clienteSelecionado.nome,
+    proc: document.querySelector('#modal-agendar select').value,
+    status: isEnc ? 'encaixe' : 'pendente',
+    prof: parseInt(document.getElementById('sel-prof').value),
+    obs: document.getElementById('obs-agendamento').value,
+  });
+  fecharModal('modal-agendar');
+  renderAgenda();
+  renderRisco();
+  alert(`${isEnc ? 'Encaixe' : 'Agendamento'} salvo! Lembretes via WhatsApp serão enviados para ${clienteSelecionado.nome}.`);
+}
+
+function verDetalhes(apt) {
+  const statusLabel = { confirmado:'✅ Confirmado', pendente:'⏳ Pendente', noshow:'⚠️ No-show', encaixe:'🔵 Encaixe', cancelado:'❌ Cancelado' };
+  document.getElementById('det-avatar').textContent = apt.cliente[0];
+  document.getElementById('det-nome').textContent = apt.cliente;
+  document.getElementById('det-status-chip').textContent = statusLabel[apt.status] || apt.status;
+  document.getElementById('det-proc').textContent = apt.proc;
+  document.getElementById('det-hora').textContent = `${String(apt.hora).padStart(2,'0')}:${String(apt.min).padStart(2,'0')} · ${apt.dur}min`;
+  const obsBox = document.getElementById('det-obs-box');
+  if (apt.obs) { obsBox.style.display = 'block'; document.getElementById('det-obs').textContent = apt.obs; }
+  else { obsBox.style.display = 'none'; }
+  document.getElementById('modal-detalhes').classList.add('ativo');
+}
+
+function setToggle(on) {
+  document.getElementById('toggle-track').style.background = on ? 'var(--teal)' : 'var(--border)';
+  document.getElementById('toggle-thumb').style.left = on ? '20px' : '2px';
+}
+
+function fecharModal(id) { document.getElementById(id).classList.remove('ativo'); }
+function voltarDia()  { dataAtual.setDate(dataAtual.getDate()-1);  renderAgenda(); renderMiniCal(); }
+function avancarDia() { dataAtual.setDate(dataAtual.getDate()+1);  renderAgenda(); renderMiniCal(); }
+function irHoje()     { dataAtual = new Date(2025,3,16);           renderAgenda(); renderMiniCal(); }
+function irDia(d)     { dataAtual.setDate(d);                      renderAgenda(); renderMiniCal(); }
+
+document.getElementById('toggle-encaixe').addEventListener('change', function() { setToggle(this.checked); });
+document.getElementById('modal-agendar').addEventListener('click', e => { if(e.target===e.currentTarget) fecharModal('modal-agendar'); });
+document.getElementById('modal-cliente').addEventListener('click', e => { if(e.target===e.currentTarget) fecharModal('modal-cliente'); });
+document.getElementById('modal-detalhes').addEventListener('click', e => { if(e.target===e.currentTarget) fecharModal('modal-detalhes'); });
+document.addEventListener('click', e => {
+  if (!e.target.closest('#busca-cliente') && !e.target.closest('#lista-autocomplete'))
+    document.getElementById('lista-autocomplete').style.display = 'none';
+});
+
+function mascaraCPF(el) {
+  let v = el.value.replace(/\D/g,'').substring(0,11);
+  v = v.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2');
+  el.value = v;
+}
+function mascaraTel(el) {
+  let v = el.value.replace(/\D/g,'').substring(0,11);
+  if (v.length>=11) v = v.replace(/^(\d{2})(\d{5})(\d{4}).*/,'($1) $2-$3');
+  else if (v.length>=7) v = v.replace(/^(\d{2})(\d{4})(\d*)/,'($1) $2-$3');
+  else if (v.length>=3) v = v.replace(/^(\d{2})(\d*)/,'($1) $2');
+  el.value = v;
+}
+
+renderAgenda();
+renderMiniCal();
+renderRisco();
+</script>
+</body>
+</html>
