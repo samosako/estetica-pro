@@ -850,11 +850,10 @@ function mostrarSucesso(msg) {
 function mapearAgendamento(item, profissionaisLista) {
   // Encontra o índice do profissional na lista local
   const profIdx = profissionaisLista.findIndex(p => p.id === item.profissional_id);
-  const [horaStr, minStr] = (item.hora || '00:00').split(':');
   return {
     id:      item.id,
-    hora:    parseInt(horaStr, 10),
-    min:     parseInt(minStr, 10),
+    hora:    typeof item.hora === 'string' ? parseInt(item.hora.split(':')[0], 10) : (item.hora || 0),
+    min:     item.min !== undefined ? item.min : (typeof item.hora === 'string' ? parseInt(item.hora.split(':')[1] || 0, 10) : 0),
     dur:     item.dur || 60,
     cliente: item.cliente_nome || '',
     clienteId: item.cliente_id,

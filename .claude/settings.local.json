@@ -13,7 +13,9 @@
       "Bash(npm install *)",
       "Bash(taskkill /F /IM node.exe)",
       "Bash(rm -f \"C:/Users/sam.osako/Documents/CLOUDE CODE PROJETO/backend/db/estetica.db\")",
-      "Bash(cmd *)"
+      "Bash(cmd *)",
+      "Bash(timeout 5 node server.js)",
+      "Bash(node -e ' *)"
     ]
   }
 }
