@@ -938,7 +938,7 @@ const statusLabelDetalhe = { confirmado:'✅ Confirmado', pendente:'⏳ Pendente
 function verDetalhes(apt) {
   document.getElementById('det-avatar').textContent = apt.cliente[0];
   document.getElementById('det-nome').textContent = apt.cliente;
-  document.getElementById('det-status-chip').textContent = statusLabel[apt.status] || apt.status;
+  document.getElementById('det-status-chip').textContent = statusLabelDetalhe[apt.status] || apt.status;
   document.getElementById('det-proc').textContent = apt.proc;
   document.getElementById('det-hora').textContent = `${String(apt.hora).padStart(2,'0')}:${String(apt.min).padStart(2,'0')} · ${apt.dur}min`;
   const obsBox = document.getElementById('det-obs-box');
