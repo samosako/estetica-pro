@@ -670,14 +670,19 @@
       </div>
       <!-- Ações -->
       <div class="grid grid-cols-3 gap-2 pt-1">
-        <button onclick="fecharModal('modal-detalhes')" class="py-2 text-xs font-semibold rounded-xl" style="background:var(--teal-bg); color:var(--teal-dark); border:1px solid var(--teal-mid)">✓ Confirmar</button>
+        <button onclick="confirmarApt()" class="py-2 text-xs font-semibold rounded-xl" style="background:var(--teal-bg); color:var(--teal-dark); border:1px solid var(--teal-mid)">✓ Confirmar</button>
         <button onclick="fecharModal('modal-detalhes')" class="py-2 text-xs font-semibold rounded-xl" style="background:var(--amber-bg); color:var(--amber); border:1px solid var(--amber-mid)">↻ Remarcar</button>
-        <button onclick="fecharModal('modal-detalhes')" class="py-2 text-xs font-semibold rounded-xl" style="background:#fcdcdc; color:#8c2020; border:1px solid #d06060">✕ Cancelar</button>
+        <button onclick="cancelarApt()" class="py-2 text-xs font-semibold rounded-xl" style="background:#fcdcdc; color:#8c2020; border:1px solid #d06060">✕ Cancelar</button>
       </div>
-      <!-- Lembrete WhatsApp -->
-      <button onclick="alert('Lembrete enviado via WhatsApp!')" class="w-full py-2.5 text-sm btn-primary">
-        Enviar Lembrete WhatsApp
-      </button>
+      <!-- Lembrete WhatsApp + Excluir -->
+      <div class="flex gap-2">
+        <button onclick="alert('Lembrete enviado via WhatsApp!')" class="flex-1 py-2.5 text-sm btn-primary">
+          Enviar Lembrete WhatsApp
+        </button>
+        <button onclick="deletarApt()" class="py-2.5 px-3 text-sm rounded-xl font-semibold" style="background:#fcdcdc; color:#8c2020; border:1px solid #d06060" title="Excluir agendamento">
+          🗑
+        </button>
+      </div>
     </div>
   </div>
 </div>
