@@ -27,6 +27,14 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
   );
 
+  CREATE TABLE IF NOT EXISTS procedimentos (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome       TEXT NOT NULL,
+    valor      REAL NOT NULL DEFAULT 0,
+    dur        INTEGER NOT NULL DEFAULT 60,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
   CREATE TABLE IF NOT EXISTS agendamentos (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     data            TEXT    NOT NULL,
