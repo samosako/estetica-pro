@@ -799,6 +799,17 @@ function mapearAgendamento(item, profissionaisLista) {
 /* ============================================================
    CARREGAR DADOS DA API
    ============================================================ */
+async function carregarProcedimentos() {
+  try {
+    const res = await fetch(`${API_BASE}/procedimentos`);
+    if (!res.ok) throw new Error(`Erro HTTP ${res.status}`);
+    procedimentos = await res.json();
+    atualizarSelectProcedimentos();
+  } catch (err) {
+    console.warn('[EstéticaPro] Não foi possível carregar procedimentos:', err.message);
+  }
+}
+
 async function carregarDados(data) {
   mostrarCarregando(true);
   const dataISO = dataParaISO(data);
@@ -834,7 +845,7 @@ async function carregarDados(data) {
 
     agendamentos = dadosAgendamentos.map(item => mapearAgendamento(item, profissionais));
 
-    // Atualiza select de profissionais no modal
+    // Atualiza selects do modal
     atualizarSelectProfissionais();
 
     renderAgenda();
