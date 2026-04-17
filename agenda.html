@@ -1030,14 +1030,40 @@ function abrirNovaCliente(v) {
   document.getElementById('modal-cliente').classList.add('ativo');
 }
 
-function cadastrarCliente() {
+async function cadastrarCliente() {
   const nome = document.getElementById('nc-nome').value.trim();
   const cpf  = document.getElementById('nc-cpf').value.trim();
   const tel  = document.getElementById('nc-tel').value.trim();
-  if (!nome || !cpf || !tel) { alert('Preencha nome, CPF e telefone.'); return; }
-  clientes.push({ nome, cpf, tel });
-  fecharModal('modal-cliente');
-  selecionarCliente(nome);
+  if (!nome || !cpf || !tel) { mostrarErroAPI('Preencha nome, CPF e telefone.'); return; }
+
+  try {
+    const res = await fetch(`${API_BASE}/clientes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome, cpf, tel }),
+    });
+    if (!res.ok) {
+      const erro = await res.json().catch(() => ({}));
+      throw new Error(erro.message || `Erro HTTP ${res.status}`);
+    }
+    const novoCliente = await res.json();
+    // Adiciona ao array local com o id retornado pela API
+    const clienteLocal = { id: novoCliente.id, nome, cpf, tel };
+    clientes.push(clienteLocal);
+    fecharModal('modal-cliente');
+    // Seleciona diretamente pelo objeto (já possui id)
+    clienteSelecionado = clienteLocal;
+    document.getElementById('busca-cliente').value = nome;
+    document.getElementById('lista-autocomplete').style.display = 'none';
+    document.getElementById('cliente-selecionado').style.display = 'flex';
+    document.getElementById('cs-avatar').textContent = nome[0];
+    document.getElementById('cs-nome').textContent   = nome;
+    document.getElementById('cs-tel').textContent    = tel + ' · ' + cpf;
+    mostrarSucesso(`Cliente "${nome}" cadastrada com sucesso!`);
+  } catch (err) {
+    console.error('[EstéticaPro] Erro ao cadastrar cliente:', err);
+    mostrarErroAPI(`Não foi possível cadastrar a cliente: ${err.message}`);
+  }
 }
 
 async function salvarApt() {
