@@ -40,6 +40,33 @@ CSS custom properties drive theming:
 
 Language: Portuguese (pt-BR). All user-facing text and variable names are in Portuguese.
 
+## GitHub Repository
+
+**Repositório:** https://github.com/samosako/estetica-pro  
+**Branch principal:** `master`
+
+### Auto-sync configurado
+
+Toda alteração feita via Claude Code (ferramentas `Edit` ou `Write`) é automaticamente:
+1. Adicionada ao staging (`git add -A`)
+2. Commitada com mensagem `Atualizar <nome-do-arquivo>`
+3. Enviada ao GitHub (`git push`)
+
+O hook está em `.claude/settings.json` → `PostToolUse` matcher `Write|Edit`, rodando em modo `async` para não bloquear o fluxo de trabalho.
+
+### Comandos manuais úteis
+
+```bash
+git status          # ver mudanças locais
+git log --oneline   # histórico de commits
+git push            # forçar push manual se necessário
+```
+
+### GitHub CLI
+
+O `gh` CLI está instalado em `C:\Program Files\GitHub CLI\gh.exe`.  
+Autenticado como usuário `samosako`.
+
 ## Current Limitations
 
 - No backend — all data is hardcoded mock data

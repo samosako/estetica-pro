@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -c \"import sys,json; d=json.load(sys.stdin); print(d.get('tool_input',{}).get('file_path','arquivo'))\" | { read -r f; cd \"c:/Users/sam.osako/Documents/CLOUDE CODE PROJETO\" && git add -A && git diff --cached --quiet || (git commit -m \"Atualizar $(basename \\\"$f\\\")\" && git push); } 2>/dev/null || true",
+            "statusMessage": "Sincronizando com GitHub...",
+            "async": true
+          }
+        ]
+      }
+    ]
+  }
+}
