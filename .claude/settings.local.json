@@ -7,7 +7,8 @@
       "Bash(powershell.exe -Command \"& 'C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe' --version\")",
       "Bash(powershell.exe -Command \"& 'C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe' repo create estetica-pro --public --description 'EstéticaPro - Sistema de agendamento para salão de beleza' --source . --remote origin --push\")",
       "Skill(update-config)",
-      "Skill(update-config:*)"
+      "Skill(update-config:*)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\('tool_input',{}\\).get\\('file_path','unknown'\\)\\)\")"
     ]
   }
 }
