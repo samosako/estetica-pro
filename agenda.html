@@ -975,6 +975,141 @@ function mascaraTel(el) {
   el.value = v;
 }
 
+/* ============================================================
+   TABELA DE VALORES FICTÍCIOS POR PROCEDIMENTO
+   ============================================================ */
+const valorProcedimento = {
+  'Limpeza de Pele':        'R$ 180,00',
+  'Botox':                  'R$ 950,00',
+  'Preenchimento Labial':   'R$ 1.200,00',
+  'Microagulhamento':       'R$ 320,00',
+  'Drenagem Linfática':     'R$ 150,00',
+  'Peeling Químico':        'R$ 280,00',
+  'Design de Sobrancelhas': 'R$ 90,00',
+  'Cílios (Lash Lifting)':  'R$ 220,00',
+  'Massagem Relaxante':     'R$ 160,00',
+};
+
+const statusLabel = {
+  confirmado: 'Confirmado',
+  pendente:   'Pendente',
+  cancelado:  'Cancelado',
+  noshow:     'No-show',
+  encaixe:    'Encaixe',
+};
+
+/* ============================================================
+   TOOLTIP
+   ============================================================ */
+const tooltip     = document.getElementById('apt-tooltip');
+let   tipTimeout  = null;
+
+function mostrarTooltip(e, apt) {
+  clearTimeout(tipTimeout);
+
+  const data = dataAtual;
+  const diaNum = data.getDate();
+  const mesNome = meses[data.getMonth()];
+  const anoNum  = data.getFullYear();
+  const diaSem  = diasSemana[data.getDay()];
+  const valor   = valorProcedimento[apt.proc] || 'R$ —';
+  const prof    = profissionais[apt.prof];
+
+  tooltip.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <div style="width:28px;height:28px;border-radius:50%;background:${prof.cor}22;color:${prof.cor};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">${prof.nome[0]}</div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--text)">${apt.cliente}</div>
+        <div style="font-size:10px;color:var(--text-muted)">${prof.nome}</div>
+      </div>
+    </div>
+    <hr class="tip-divisor"/>
+    <div class="tip-linha">
+      <div class="tip-titulo">Agendamento</div>
+      <div class="tip-valor">${diaNum} de ${mesNome} de ${anoNum}</div>
+      <div style="font-size:11px;color:var(--text-muted)">${diaSem} · ${apt.dur} min</div>
+    </div>
+    <div class="tip-linha">
+      <div class="tip-titulo">Procedimento</div>
+      <div class="tip-valor">${apt.proc}</div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div class="tip-linha" style="margin-bottom:0">
+        <div class="tip-titulo">Valor</div>
+        <div class="tip-valor" style="color:var(--teal-dark)">${valor}</div>
+      </div>
+      <div>
+        <span class="tip-badge ${apt.status}">${statusLabel[apt.status] || apt.status}</span>
+      </div>
+    </div>`;
+
+  posicionarTooltip(e);
+  tooltip.classList.add('visivel');
+}
+
+function posicionarTooltip(e) {
+  const TW = 230, TH = 200, MARGIN = 12;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  let x = e.clientX + MARGIN;
+  let y = e.clientY + MARGIN;
+  if (x + TW + MARGIN > vw) x = e.clientX - TW - MARGIN;
+  if (y + TH + MARGIN > vh) y = e.clientY - TH - MARGIN;
+  tooltip.style.left = Math.max(8, x) + 'px';
+  tooltip.style.top  = Math.max(8, y) + 'px';
+}
+
+function moverTooltip(e) {
+  if (tooltip.classList.contains('visivel')) posicionarTooltip(e);
+}
+
+function ocultarTooltip() {
+  tipTimeout = setTimeout(() => tooltip.classList.remove('visivel'), 80);
+}
+
+/* ============================================================
+   MENU DE CONTEXTO
+   ============================================================ */
+const ctxMenu = document.getElementById('ctx-menu');
+let   ctxApt  = null;  // agendamento alvo do menu
+
+function abrirCtxMenu(e, apt) {
+  e.preventDefault();
+  e.stopPropagation();
+  ctxApt = apt;
+
+  const MW = 200, MH = 220, MARGIN = 6;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  let x = e.clientX + MARGIN;
+  let y = e.clientY + MARGIN;
+  if (x + MW > vw) x = e.clientX - MW - MARGIN;
+  if (y + MH > vh) y = e.clientY - MH - MARGIN;
+
+  ctxMenu.style.left = Math.max(4, x) + 'px';
+  ctxMenu.style.top  = Math.max(4, y) + 'px';
+  ctxMenu.classList.add('visivel');
+}
+
+function fecharCtxMenu() {
+  ctxMenu.classList.remove('visivel');
+  ctxApt = null;
+}
+
+ctxMenu.querySelectorAll('.ctx-item').forEach(item => {
+  item.addEventListener('click', () => {
+    if (!ctxApt) return;
+    ctxApt.status = item.dataset.status;
+    fecharCtxMenu();
+    renderAgenda();
+  });
+});
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('#ctx-menu')) fecharCtxMenu();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') fecharCtxMenu();
+});
+
 renderAgenda();
 renderMiniCal();
 renderRisco();
