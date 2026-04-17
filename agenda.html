@@ -463,107 +463,228 @@
 
 <!-- MODAL AGENDAMENTO -->
 <div class="modal-overlay" id="modal-agendar">
-  <div class="modal-box">
-    <div class="modal-header">
+  <div class="modal-box" style="max-width:540px; display:flex; flex-direction:column; max-height:90vh">
+
+    <!-- HEADER -->
+    <div class="modal-header" style="flex-shrink:0; background:linear-gradient(135deg, var(--lavender-bg), var(--surface)); padding:18px 24px 14px">
       <div class="flex items-center justify-between">
-        <div>
-          <h3 style="font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:600; color:var(--lavender)">Novo Agendamento</h3>
-          <p id="modal-horario-label" style="font-size:12px; color:var(--text-muted)" class="mt-0.5"></p>
+        <div class="flex items-center gap-3">
+          <h3 style="font-family:'Cormorant Garamond',serif; font-size:21px; font-weight:600; color:var(--lavender)">Novo Agendamento</h3>
+          <div class="flex items-center gap-1.5">
+            <span style="background:var(--lavender-bg); border:1px solid var(--lavender-mid); color:var(--lavender); font-size:10px; font-weight:600; padding:2px 8px; border-radius:20px; display:inline-flex; align-items:center; gap:4px; cursor:default">
+              <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+              Link
+            </span>
+            <span style="background:#fff8ed; border:1px solid #f0c060; color:#9a6f20; font-size:10px; font-weight:600; padding:2px 8px; border-radius:20px; display:inline-flex; align-items:center; gap:4px; cursor:default">
+              <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+              Alerta
+            </span>
+          </div>
         </div>
-        <button onclick="fecharModal('modal-agendar')" class="p-2 rounded-xl btn-ghost">
+        <button onclick="fecharModal('modal-agendar')" class="p-2 rounded-xl btn-ghost" style="flex-shrink:0">
           <svg width="13" height="13" fill="none" stroke="var(--text-muted)" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
       </div>
     </div>
-    <div style="padding:20px 24px" class="space-y-4">
 
-      <!-- Cliente -->
-      <div>
-        <label class="field-label">Cliente</label>
-        <div class="relative">
-          <input id="busca-cliente" type="text" placeholder="Digite o nome da cliente..." class="field-input" autocomplete="off" oninput="buscarCliente(this.value)" />
-          <div id="lista-autocomplete" class="autocomplete-list" style="display:none"></div>
-        </div>
-        <div id="cliente-selecionado" style="display:none; margin-top:8px; background:var(--lavender-bg); border:1.5px solid var(--lavender-mid); border-radius:10px; padding:10px 12px; gap:10px; align-items:center" class="flex">
-          <div id="cs-avatar" class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style="background:linear-gradient(135deg,var(--lavender),var(--rose))"></div>
-          <div class="flex-1">
-            <p id="cs-nome" style="font-size:12px; font-weight:600; color:var(--text)"></p>
-            <p id="cs-tel" style="font-size:10px; color:var(--text-muted)"></p>
+    <!-- TABS DE TIPO -->
+    <div style="flex-shrink:0; background:var(--surface); border-bottom:1px solid var(--border-soft); padding:0 24px; display:flex; gap:0">
+      <button id="tab-agendamento" onclick="selecionarTipoModal('agendamento')" style="padding:10px 14px; font-size:12px; font-weight:600; border:none; background:var(--lavender); color:white; cursor:pointer; border-radius:0; border-bottom:2px solid var(--lavender); margin-bottom:-1px">Agendamento</button>
+      <button onclick="selecionarTipoModal('bloqueio')" style="padding:10px 14px; font-size:12px; font-weight:500; border:none; background:transparent; color:var(--text-muted); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px">Bloqueio de horário</button>
+      <button onclick="selecionarTipoModal('lembrete')" style="padding:10px 14px; font-size:12px; font-weight:500; border:none; background:transparent; color:var(--text-muted); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px">Lembrete</button>
+      <button onclick="selecionarTipoModal('evento')" style="padding:10px 14px; font-size:12px; font-weight:500; border:none; background:transparent; color:var(--text-muted); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px">Evento</button>
+    </div>
+
+    <!-- CORPO DO MODAL (scrollável) -->
+    <div style="flex:1; overflow-y:auto; padding:0">
+
+      <!-- SEÇÃO: DADOS BÁSICOS -->
+      <div style="padding:20px 24px 16px">
+        <p style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.7px; margin-bottom:14px">Dados básicos</p>
+
+        <!-- Paciente -->
+        <div style="margin-bottom:14px">
+          <div class="flex items-center justify-between" style="margin-bottom:6px">
+            <label class="field-label" style="margin-bottom:0">Paciente</label>
+            <button onclick="abrirNovaCliente('')" style="font-size:11px; font-weight:600; color:var(--lavender); background:none; border:none; cursor:pointer">+ Adicionar</button>
           </div>
-          <button onclick="limparCliente()" style="color:var(--text-muted); font-size:12px; background:none; border:none; cursor:pointer">✕</button>
+          <div class="relative">
+            <input id="busca-cliente" type="text" placeholder="Digite o nome do paciente..." class="field-input" autocomplete="off" oninput="buscarCliente(this.value)" />
+            <div id="lista-autocomplete" class="autocomplete-list" style="display:none"></div>
+          </div>
+          <div id="cliente-selecionado" style="display:none; margin-top:8px; background:var(--lavender-bg); border:1.5px solid var(--lavender-mid); border-radius:10px; padding:10px 12px; gap:10px; align-items:center" class="flex">
+            <div id="cs-avatar" class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style="background:linear-gradient(135deg,var(--lavender),var(--rose))"></div>
+            <div class="flex-1">
+              <p id="cs-nome" style="font-size:12px; font-weight:600; color:var(--text)"></p>
+              <p id="cs-tel" style="font-size:10px; color:var(--text-muted)"></p>
+            </div>
+            <button onclick="limparCliente()" style="color:var(--text-muted); font-size:12px; background:none; border:none; cursor:pointer">✕</button>
+          </div>
+        </div>
+
+        <!-- Grid: Profissional | Status | Cor -->
+        <div class="grid grid-cols-3 gap-3" style="margin-bottom:14px">
+          <div>
+            <label class="field-label">Profissional</label>
+            <div style="position:relative">
+              <div id="prof-avatar-mini" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); width:20px; height:20px; border-radius:50%; background:var(--lavender); color:white; font-size:9px; font-weight:700; display:flex; align-items:center; justify-content:center; pointer-events:none">A</div>
+              <select id="sel-prof" class="field-input" style="padding-left:36px" onchange="atualizarAvatarProf()"></select>
+            </div>
+          </div>
+          <div>
+            <label class="field-label">Status</label>
+            <div style="position:relative">
+              <svg style="position:absolute; left:10px; top:50%; transform:translateY(-50%); pointer-events:none" width="13" height="13" fill="none" stroke="var(--text-muted)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              <select id="sel-status" class="field-input" style="padding-left:30px">
+                <option value="pendente">Pendente</option>
+                <option value="confirmado">Confirmado</option>
+                <option value="encaixe">Encaixe</option>
+                <option value="cancelado">Cancelado</option>
+                <option value="noshow">No-show</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="field-label">Cor</label>
+            <div style="position:relative">
+              <div id="cor-preview" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); width:14px; height:14px; border-radius:4px; background:var(--lavender); pointer-events:none"></div>
+              <select id="sel-cor" class="field-input" style="padding-left:30px" onchange="atualizarCorPreview()">
+                <option value="lavender">Lavanda</option>
+                <option value="rose">Rosa</option>
+                <option value="teal">Teal</option>
+                <option value="amber">Âmbar</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Observações -->
+        <div>
+          <label class="field-label">Observações</label>
+          <textarea id="obs-agendamento" class="field-input" rows="2" placeholder="Pele sensível, alergias, preferências..."></textarea>
         </div>
       </div>
 
-      <!-- Horário: minutos ajustáveis -->
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="field-label">Minutos</label>
-          <select id="sel-min" class="field-input" onchange="modalMin = parseInt(this.value)">
-            <option value="0">:00</option>
-            <option value="15">:15</option>
-            <option value="30">:30</option>
-            <option value="45">:45</option>
-          </select>
-        </div>
-        <div>
-          <label class="field-label">Duração</label>
-          <select id="sel-dur" class="field-input">
-            <option value="15">15 min</option>
-            <option value="30">30 min</option>
-            <option value="45">45 min</option>
-            <option value="60" selected>60 min</option>
-            <option value="90">90 min</option>
-            <option value="120">120 min</option>
-            <option value="180">180 min</option>
-          </select>
-        </div>
-      </div>
+      <hr style="border:none; border-top:1px solid var(--border-soft); margin:0" />
 
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="field-label">Profissional</label>
-          <select id="sel-prof" class="field-input"></select>
+      <!-- SEÇÃO: PROCEDIMENTOS -->
+      <div style="padding:16px 24px">
+        <p style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.7px; margin-bottom:12px">Procedimentos / Produtos</p>
+
+        <!-- Cabeçalho da grid -->
+        <div class="grid" style="grid-template-columns:1fr 64px 32px; gap:6px; margin-bottom:6px">
+          <span style="font-size:10px; font-weight:600; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px">Nome</span>
+          <span style="font-size:10px; font-weight:600; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; text-align:center">Qtd.</span>
+          <span></span>
         </div>
-        <div>
-          <label class="field-label">Procedimento</label>
-          <select id="sel-proc" class="field-input" onchange="aoSelecionarProcedimento(this)">
+
+        <!-- Linha 1: dropdown real -->
+        <div class="grid" style="grid-template-columns:1fr 64px 32px; gap:6px; align-items:center; margin-bottom:6px">
+          <select id="sel-proc" class="field-input" style="font-size:12px; padding:8px 10px" onchange="aoSelecionarProcedimento(this)">
             <option value="">Carregando...</option>
           </select>
-          <div id="proc-valor-info" style="font-size:11px; color:var(--teal-dark); font-weight:600; margin-top:5px; display:none"></div>
+          <input id="inp-qtd-0" type="number" min="1" value="1" class="field-input" style="font-size:12px; padding:8px; text-align:center" />
+          <button style="background:none; border:none; cursor:pointer; color:var(--text-dim); display:flex; align-items:center; justify-content:center; padding:4px" title="Remover">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+          </button>
         </div>
+
+        <!-- Linha 2: placeholder estática -->
+        <div class="grid" style="grid-template-columns:1fr 64px 32px; gap:6px; align-items:center; margin-bottom:10px">
+          <div class="field-input" style="font-size:12px; padding:8px 10px; color:var(--text-dim); cursor:text">Pesquise / Selecione</div>
+          <input type="number" min="1" value="1" class="field-input" style="font-size:12px; padding:8px; text-align:center; opacity:0.5" disabled />
+          <button style="background:none; border:none; cursor:pointer; color:var(--text-dim); opacity:0.4; display:flex; align-items:center; justify-content:center; padding:4px" disabled>
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+          </button>
+        </div>
+
+        <!-- Info de valor -->
+        <div id="proc-valor-info" style="font-size:11px; color:var(--teal-dark); font-weight:600; margin-bottom:8px; display:none"></div>
+
+        <button style="font-size:12px; font-weight:600; color:var(--lavender); background:none; border:none; cursor:pointer; padding:0">+ Adicionar Procedimentos / Produtos</button>
       </div>
 
-      <!-- Encaixe toggle -->
-      <div class="flex items-center justify-between p-3 rounded-xl" style="background:var(--teal-bg); border:1.5px solid var(--teal-mid)">
-        <div>
-          <p style="font-size:12px; font-weight:600; color:var(--teal-dark)">Marcar como Encaixe</p>
-          <p style="font-size:10px; color:var(--text-muted); margin-top:2px">Horário fora da grade ou urgência</p>
+      <hr style="border:none; border-top:1px solid var(--border-soft); margin:0" />
+
+      <!-- SEÇÃO: DATA -->
+      <div style="padding:16px 24px">
+        <div class="flex items-center justify-between" style="margin-bottom:12px">
+          <p style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.7px">Data</p>
+          <button id="btn-colapsar-data" onclick="colapsarSecaoData()" style="background:none; border:none; cursor:pointer; color:var(--text-muted); display:flex; align-items:center; padding:2px">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 15l-6-6-6 6"/></svg>
+          </button>
         </div>
-        <label style="position:relative; display:inline-flex; align-items:center; cursor:pointer; flex-shrink:0">
-          <input type="checkbox" id="toggle-encaixe" style="display:none" />
-          <div id="toggle-track" style="width:40px;height:22px;border-radius:11px;background:var(--border);border:1.5px solid var(--border);transition:background 0.2s;position:relative">
-            <div id="toggle-thumb" style="position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:white;transition:left 0.2s;box-shadow:var(--shadow-sm)"></div>
+
+        <div id="secao-data-corpo">
+          <!-- Grid: Dia | Início | Fim -->
+          <div class="grid grid-cols-3 gap-3" style="margin-bottom:10px">
+            <div>
+              <label class="field-label">Dia <span style="color:var(--rose)">*</span></label>
+              <div style="position:relative">
+                <svg style="position:absolute; left:9px; top:50%; transform:translateY(-50%); pointer-events:none" width="13" height="13" fill="none" stroke="var(--text-muted)" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                <input id="sel-data" type="date" class="field-input" style="padding-left:30px; font-size:12px" />
+              </div>
+            </div>
+            <div>
+              <label class="field-label">Início <span style="color:var(--rose)">*</span></label>
+              <div style="position:relative">
+                <svg style="position:absolute; left:9px; top:50%; transform:translateY(-50%); pointer-events:none" width="13" height="13" fill="none" stroke="var(--text-muted)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                <input id="sel-hora-ini" type="time" class="field-input" style="padding-left:30px; font-size:12px" oninput="atualizarHoraFim()" />
+              </div>
+            </div>
+            <div>
+              <label class="field-label">Fim <span style="color:var(--rose)">*</span></label>
+              <div style="position:relative">
+                <svg style="position:absolute; left:9px; top:50%; transform:translateY(-50%); pointer-events:none" width="13" height="13" fill="none" stroke="var(--text-muted)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                <input id="sel-hora-fim" type="time" class="field-input" style="padding-left:30px; font-size:12px" oninput="atualizarHoraFim()" />
+              </div>
+            </div>
           </div>
-        </label>
+
+          <!-- Último atendimento -->
+          <p id="info-ultimo-atendimento" style="font-size:11px; color:var(--text-dim); margin-bottom:12px">Último atendimento: —</p>
+
+          <!-- Recorrência -->
+          <div style="margin-bottom:12px">
+            <label class="field-label">Recorrência</label>
+            <select id="sel-recorrencia" class="field-input" style="font-size:12px">
+              <option value="nao">Não se repete</option>
+              <option value="diario">Diariamente</option>
+              <option value="semanal">Semanalmente</option>
+              <option value="mensal">Mensalmente</option>
+            </select>
+          </div>
+
+          <!-- Warning de notificação -->
+          <div id="warn-lembrete" style="display:none; background:#fffbeb; border-left:3px solid var(--amber); border-radius:0 8px 8px 0; padding:10px 12px; font-size:11px; color:#7a5010; line-height:1.5">
+            A notificação de <strong>Lembrete de agendamento (E-mail)</strong> não será enviada pois o tempo de antecedência configurado é maior que o tempo disponível até o agendamento.
+          </div>
+        </div>
       </div>
 
-      <!-- Observações -->
-      <div>
-        <label class="field-label">Observações</label>
-        <textarea id="obs-agendamento" class="field-input" rows="2" placeholder="Pele sensível, alergias, preferências..."></textarea>
+      <hr style="border:none; border-top:1px solid var(--border-soft); margin:0" />
+
+      <!-- SEÇÃO: FINANCEIRO (colapsada) -->
+      <div style="padding:14px 24px">
+        <button onclick="toggleFinanceiro()" class="flex items-center justify-between w-full" style="background:none; border:none; cursor:pointer; padding:0">
+          <div class="flex items-center gap-2">
+            <p style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.7px">Financeiro</p>
+            <span style="font-size:11px; color:var(--text-dim)">Comanda desabilitada</span>
+          </div>
+          <svg id="financeiro-chevron" width="13" height="13" fill="none" stroke="var(--text-muted)" stroke-width="2.5" viewBox="0 0 24 24" style="transition:transform 0.2s"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div id="financeiro-corpo" style="display:none; padding-top:12px">
+          <p style="font-size:12px; color:var(--text-dim); text-align:center">Nenhuma comanda vinculada.</p>
+        </div>
       </div>
 
-      <!-- Aviso IA -->
-      <div class="flex items-start gap-3 p-3 rounded-xl" style="background:var(--lavender-bg); border:1px solid var(--lavender-mid)">
-        <span class="tag-ia flex-shrink-0" style="margin-top:1px">IA</span>
-        <p style="font-size:11px; color:var(--lavender-dark); line-height:1.5; font-weight:500">Lembretes automáticos serão enviados via WhatsApp: 48h, 24h e 2h antes.</p>
-      </div>
-
-      <div class="flex gap-2">
-        <button onclick="fecharModal('modal-agendar')" class="flex-1 py-2.5 text-sm btn-ghost">Cancelar</button>
-        <button onclick="salvarApt()" class="flex-1 py-2.5 text-sm btn-primary">Confirmar</button>
-      </div>
     </div>
+
+    <!-- FOOTER FIXO -->
+    <div style="flex-shrink:0; padding:14px 24px; border-top:1px solid var(--border-soft); background:var(--surface); box-shadow:0 -2px 8px rgba(0,0,0,0.06); display:flex; justify-content:center">
+      <button onclick="salvarApt()" class="btn-primary" style="width:180px; padding:11px 0; font-size:14px">Salvar</button>
+    </div>
+
   </div>
 </div>
 
